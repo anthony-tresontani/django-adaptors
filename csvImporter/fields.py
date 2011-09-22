@@ -11,12 +11,17 @@ class Field(object):
             Field.position += 1
         if 'match' in kwargs:
             self.match = kwargs.pop('match')
+        if 'transform' in kwargs:
+            self.transform = kwargs.pop('transform')
         if len(kwargs)>0:
             raise ValueError("Arguments %s unexpected" % kwargs.keys())
 
     def get_prep_value(self,value):
         try:
-            return self.to_python(value)
+            value = self.to_python(value)
+            if hasattr(self,"transform"):
+                return self.transform(value)
+            return value
         except ValueError:
             raise ValueError("Value \'%s\' in columns %d does not match the expected type %s" % (value,self.position+1,self.__class__))
 

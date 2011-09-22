@@ -1,7 +1,7 @@
 from django.test import TestCase
 from fields import *
 from model import CsvModel, CsvDbModel, ImproperlyConfigured
-from myTestModel.models import MyModel, MyModel2, MyModelWithForeign
+from myTestModel.models import MyModel, MyModel2, MyModelWithForeign, OtherForeign
 
 
 class TestCsvModel(CsvModel):
@@ -196,6 +196,18 @@ class TestCsvImporter(TestCase):
         
     def test_with_invalid_foreign(self):
         self.assertRaises(ImproperlyConfigured,TestCsvDbForeignInvalid,[1])
+        
+    def test_transform_foreign(self):
+        class TestCsvDbForeignFollow(CsvModel):
+            foreign_csv = ForeignKey(MyModelWithForeign,transform= lambda x:x.foreign,match="foreign")
+    
+            class Meta:
+                dbModel = OtherForeign
+        
+        my_model = MyModel.objects.create(nom="Gigi", age=10, taille= 1.2)
+        foreign = MyModelWithForeign.objects.create(foreign=my_model)
+        test = TestCsvDbForeignFollow.import_data(["%d" % foreign.id] )
+        self.assertEquals(my_model, test[0].foreign_csv)
 
 class TestFields(TestCase):
     

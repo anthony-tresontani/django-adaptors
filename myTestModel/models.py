@@ -14,3 +14,7 @@ class MyModel2(models.Model):
 class MyModelWithForeign(models.Model):
     
     foreign = models.ForeignKey(MyModel)
+    
+class OtherForeign(models.Model):
+    
+    foreign = models.ForeignKey(MyModel)
