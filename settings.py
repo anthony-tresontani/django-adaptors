@@ -119,7 +119,8 @@ INSTALLED_APPS = (
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
     'csv_importer.csvImporter',
-    'csv_importer.myTestModel'
+    'csv_importer.myTestModel',
+    'django_nose',
 )
 
 # A sample logging configuration. The only tangible logging
@@ -144,3 +145,5 @@ LOGGING = {
         },
     }
 }
+
+TEST_RUNNER = 'django_nose.NoseTestSuiteRunner'

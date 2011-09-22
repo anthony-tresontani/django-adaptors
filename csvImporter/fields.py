@@ -1,3 +1,5 @@
+from django.db.models import Model as djangoModel
+
 class Field(object):
     position =0
 
@@ -31,3 +33,20 @@ class CharField(Field):
 class FloatField(Field):
     def to_python(self,value):
         return float(value)
+    
+class ForeignKey(Field): 
+    def __init__(self,*args,**kwargs):
+        self.pk = kwargs.pop('pk','pk')
+        if len(args)<1:
+            raise ValueError("You should provide a Model as the first argument.")
+        self.model = args[0]
+        try:
+            if not issubclass(self.model,djangoModel):
+                raise TypeError("The first argument should be a django model class.")
+        except TypeError,e:
+            raise TypeError("The first argument should be a django model class.")
+        super(ForeignKey,self).__init__(**kwargs)
+    
+    def to_python(self,value):
+        return self.model.objects.get(**{self.pk:value})
+        

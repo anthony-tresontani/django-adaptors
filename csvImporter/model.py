@@ -24,7 +24,7 @@ class CsvModel(object):
         values = {}
         silent_failure = self.cls.silent_failure()
         load_failed = False
-#        import pdb;pdb.set_trace()
+        print data
         for (attr_name,field),position in zip(self.attrs,range(len(self.attrs))):
             field.position = position
             if self.cls.has_delimiter():
@@ -83,6 +83,9 @@ class CsvDbModel(CsvModel):
             raise ImproperlyConfigured("dbModel attribute is missing or wrongly configured in the CsvDbModel class.")
         
     def get_fields(self):
+        cls_attrs = super(CsvDbModel,self).get_fields()
+        if len(cls_attrs) != 0:
+            raise ImproperlyConfigured("A Db model should not have any csv field defined.")
         cls = self.__class__
         attrs = []
         if cls.is_db_model():
@@ -97,7 +100,7 @@ class CsvDbModel(CsvModel):
     @classmethod
     def get_exclusion_fields(cls):
         list_exclusion = []
-        if hasattr(cls,"Meta") and hasattr(cls.Meta,"delimiter"):
+        if hasattr(cls,"Meta") and hasattr(cls.Meta,"exclude"):
             list_exclusion.append(*cls.Meta.exclude)
         if 'id' not in list_exclusion:
             list_exclusion.append('id')

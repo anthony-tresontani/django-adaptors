@@ -1,7 +1,7 @@
 from django.test import TestCase
 from fields import *
 from model import CsvModel, CsvDbModel, ImproperlyConfigured
-from myTestModel.models import MyModel
+from myTestModel.models import MyModel, MyModel2, MyModelWithForeign
 
 
 class TestCsvModel(CsvModel):
@@ -86,10 +86,23 @@ class TestCsvDBOnlyModel(CsvDbModel):
     class Meta:
         dbModel = MyModel
         delimiter = ";"
-        exclude = ['id']
+#        exclude = ['id']
         
     test_data = ["Janette;12;1.7","Roger;18;1.8"]
 
+
+class TestCsvDbForeign(CsvModel):
+    foreign = ForeignKey(MyModel)
+    
+    class Meta:
+        dbModel = MyModelWithForeign
+        
+class TestCsvDbForeignInvalid(CsvDbModel):
+    foreign = ForeignKey(MyModel)
+    
+    class Meta:
+        dbModel = MyModelWithForeign
+    
 
 class TestCsvImporter(TestCase):
     def test_has_delimiter(self):
@@ -175,8 +188,29 @@ class TestCsvImporter(TestCase):
         self.assertEquals(myModel.age, 12)
         self.assertEquals(myModel.taille, 1.7)
         
+    def test_foreign_key_model(self):
+        my_model = MyModel.objects.create(nom="Gigi", age=10, taille= 1.2)
+        test = TestCsvDbForeign.import_data(["%d" % my_model.id])
+        self.assertEquals(MyModelWithForeign.objects.all().count(), 1)
+        
+        
+    def test_with_invalid_foreign(self):
+        self.assertRaises(ImproperlyConfigured,TestCsvDbForeignInvalid,[1])
 
-
+class TestFields(TestCase):
+    
+    def test_foreign_key(self):
+        self.assertRaises(ValueError,ForeignKey)
+        self.assertRaises(TypeError,ForeignKey,10)
+        field = ForeignKey(MyModel)
+        myModel = MyModel.objects.create(nom="jojo",age="10",taille=1.5)
+        self.assertEquals(field.to_python(myModel.id), myModel)
+        
+    def test_foreign_other_pk(self):
+        field = ForeignKey(MyModel2,pk="other_pk")
+        myModel2 = MyModel2.objects.create(other_pk=10)
+        self.assertEquals(field.to_python(myModel2.other_pk), myModel2)
+        
 
 
         
