@@ -102,7 +102,7 @@ class TestCsvDbForeignInvalid(CsvDbModel):
     
     class Meta:
         dbModel = MyModelWithForeign
-    
+
 
 class TestCsvImporter(TestCase):
     def test_has_delimiter(self):
@@ -211,7 +211,25 @@ class TestFields(TestCase):
         myModel2 = MyModel2.objects.create(other_pk=10)
         self.assertEquals(field.to_python(myModel2.other_pk), myModel2)
         
-
+class TestImporter(TestCase):
+    
+    
+    def test_extra_fields(self):
+        
+        class TestCsvExtraFields(CsvModel):
+            nom = CharField()
+            age = IntegerField()
+            taille = FloatField()
+            extra_value = CharField()
+            
+            class Meta:
+                delimiter = ";"
+                
+            test_data = ["Janette;12;1.7","Roger;18;1.8"]
+                
+        test = TestCsvExtraFields.import_data(TestCsvExtraFields.test_data,extra_fields=["extra"])
+        self.assertEquals(test[0].extra_value, "extra")
+        self.assertEquals(test[1].extra_value, "extra")
 
         
 

@@ -73,8 +73,8 @@ class CsvModel(object):
         return cls.Meta.silent_failure
 
     @classmethod
-    def import_data(cls,data):
-        return CsvImporter(data=data,csvModel=cls)
+    def import_data(cls,data,extra_fields=[]):
+        return CsvImporter(data=data,csvModel=cls,extra_fields=extra_fields)
 
 class CsvDbModel(CsvModel):
         
@@ -109,7 +109,7 @@ class CsvDbModel(CsvModel):
 
 class CsvImporter(object):
 
-    def __init__(self,data,csvModel):
+    def __init__(self,data,csvModel,extra_fields=[]):
         self.data = data
         self.csvModel = csvModel
         self.lines = []
@@ -119,6 +119,9 @@ class CsvImporter(object):
             delimiter=","
         has_header_anymore = csvModel.has_header()
         for line in csv.reader(self.data,delimiter=delimiter):
+            if extra_fields:
+                line.append(*extra_fields)
+                print "Extra: %s" % data
             if has_header_anymore:
                 has_header_anymore = False
                 continue
