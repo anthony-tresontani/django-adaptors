@@ -12,22 +12,22 @@ class Field(object):
         if len(kwargs)>0:
             raise ValueError("Arguments %s unexpected" % kwargs.keys())
 
-    def get_value(self,value):
+    def get_prep_value(self,value):
         try:
-            return self.prep_value(value)
+            return self.to_python(value)
         except ValueError:
-            raise ValueError("Value %s in columns %d does not match the expected type %s" % (value,self.position+1,self.__class__))
+            raise ValueError("Value \'%s\' in columns %d does not match the expected type %s" % (value,self.position+1,self.__class__))
 
 
 class IntegerField(Field):
 
-    def prep_value(self,value):
+    def to_python(self,value):
         return int(value)
 
 class CharField(Field):
-    def prep_value(self,value):
+    def to_python(self,value):
         return value
 
 class FloatField(Field):
-    def prep_value(self,value):
+    def to_python(self,value):
         return float(value)

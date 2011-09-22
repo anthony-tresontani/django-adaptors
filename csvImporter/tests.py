@@ -1,6 +1,6 @@
 from django.test import TestCase
 from fields import *
-from model import CsvModel, ImproperlyConfigured
+from model import CsvModel, CsvDbModel, ImproperlyConfigured
 from myTestModel.models import MyModel
 
 
@@ -69,16 +69,26 @@ class TestCsvWithHeader(TestCsvModel):
     class Meta:
         delimiter = ";"
         has_header = True
+        dbModel = MyModel
 
     test_data = ["Name;Age;length", "Roger;10;1.8", "Janette;12;1.7"]
 
 
 class TestCsvExitOnFailure(TestCsvModel):
     class Meta:
-        exit_on_failure = False
+        silent_failure = True
         delimiter = ";"
+        dbModel = MyModel
 
     test_data = ["Roger;Error;1.8", "Janette;12;1.7"]
+    
+class TestCsvDBOnlyModel(CsvDbModel):
+    class Meta:
+        dbModel = MyModel
+        delimiter = ";"
+        exclude = ['id']
+        
+    test_data = ["Janette;12;1.7","Roger;18;1.8"]
 
 
 class TestCsvImporter(TestCase):
@@ -151,11 +161,20 @@ class TestCsvImporter(TestCase):
 
     def test_exit_on_failure(self):
         test = TestCsvExitOnFailure.import_data(TestCsvExitOnFailure.test_data)
-        self.assertEquals(MyModel.objects.all().count(), 2)
+        self.assertEquals(MyModel.objects.all().count(), 1)
 
     def test_with_header(self):
         test = TestCsvWithHeader.import_data(TestCsvWithHeader.test_data)
         self.assertEquals(MyModel.objects.all().count(), 2)
+        
+    def test_direct_to_db(self):
+        test = TestCsvDBOnlyModel.import_data(TestCsvDBOnlyModel.test_data)
+        self.assertEquals(MyModel.objects.all().count(), 2)
+        myModel = MyModel.objects.all()[0]
+        self.assertEquals(myModel.nom, "Janette")
+        self.assertEquals(myModel.age, 12)
+        self.assertEquals(myModel.taille, 1.7)
+        
 
 
 
