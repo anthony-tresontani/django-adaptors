@@ -242,6 +242,25 @@ class TestImporter(TestCase):
         test = TestCsvExtraFields.import_data(TestCsvExtraFields.test_data,extra_fields=["extra"])
         self.assertEquals(test[0].extra_value, "extra")
         self.assertEquals(test[1].extra_value, "extra")
+        
+    def test_positionnal_extra_value(self):
+        
+        class TestCsvExtraFieldsPositionnal(CsvModel):
+            extra_value = CharField()
+            nom = CharField()
+            age = IntegerField()
+            taille = FloatField()
+            
+            class Meta:
+                delimiter = ";"
+                
+            test_data = ["Janette;12;1.7","Roger;18;1.8"]
+                
+        test = TestCsvExtraFieldsPositionnal.import_data(TestCsvExtraFieldsPositionnal.test_data,extra_fields=[{'value':"extra",'position':0}])
+        self.assertEquals(test[0].extra_value, "extra")
+        self.assertEquals(test[1].extra_value, "extra")
+        
+        
 
         
 

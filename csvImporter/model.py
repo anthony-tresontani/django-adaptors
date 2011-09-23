@@ -119,8 +119,17 @@ class CsvImporter(object):
             delimiter=","
         has_header_anymore = csvModel.has_header()
         for line in csv.reader(self.data,delimiter=delimiter):
+            data_length = len(line)
             if extra_fields:
-                line.append(*extra_fields)
+                extra_field_index = 0
+                for value in extra_fields:
+                    if isinstance(value,str):
+                        line.append(value)
+                    if isinstance(value,dict):
+                        position = value.get('position',len(data) + extra_field_index)
+                        if not 'value' in value:
+                            raise ValueError("If a positional extra argument is defined, a value key should be present.")
+                        line.insert(position,value['value'])
                 print "Extra: %s" % data
             if has_header_anymore:
                 has_header_anymore = False
