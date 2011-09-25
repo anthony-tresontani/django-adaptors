@@ -13,6 +13,17 @@ It is based on a django-style declarative model.
 .. toctree::
    :maxdepth: 2
 
+Installation
+------------
+
+Simple, like Pypi package:
+
+easy_install csvImporter
+
+or with Pip
+
+pip install csvImporter
+
 
 Basic sample
 ------------
