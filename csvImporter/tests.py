@@ -136,18 +136,19 @@ class TestCsvImporter(TestCase):
             index += 1
 
     def test_real_file(self):
-        test = TestCsvModel.import_from_file("test/csv1.csv")
+        file = open("test/csv1.csv")
+        test = TestCsvModel.import_from_file(file)
         line1 = test[0]
         self.assertEquals(line1.nom, 'Roger')
         self.assertEquals(line1.age, 10)
         self.assertEquals(line1.taille, 1.8)
 
     def test_db_model(self):
-        test = TestCsvDBModel.import_from_file("test/csv2.csv")
+        test = TestCsvDBModel.import_from_filename("test/csv2.csv")
         self.assertEquals(MyModel.objects.all().count(), 2)
 
     def test_db_unmatching_model(self):
-        test = TestCsvDBUnmatchingModel.import_from_file("test/csv1.csv")
+        test = TestCsvDBUnmatchingModel.import_from_filename("test/csv1.csv")
         self.assertEquals(MyModel.objects.all().count(), 1)
 
     def test_field_unexpected_attributes(self):
@@ -219,7 +220,7 @@ class TestCsvImporter(TestCase):
             class Meta:
                 dbModel = MyModel
 
-        test = TestCsvWithHeader.import_from_file("test/csv3.csv")
+        test = TestCsvWithHeader.import_from_filename("test/csv3.csv")
         self.assertEquals(MyModel.objects.all().count(), 23)
 
 class TestFields(TestCase):

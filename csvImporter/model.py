@@ -81,9 +81,15 @@ class CsvModel(object):
         return importer.import_data(data)
     
     @classmethod
-    def import_from_file(cls,filename,extra_fields=[]):
+    def import_from_filename(cls,filename,extra_fields=[]):
         importer =  CsvImporter(csvModel=cls,extra_fields=extra_fields)
-        return importer.import_from_file(filename)
+        return importer.import_from_filename(filename)
+    
+    @classmethod
+    def import_from_file(cls,file,extra_fields=[]):
+        importer =  CsvImporter(csvModel=cls,extra_fields=extra_fields)
+        return importer.import_from_file(file)
+    
 
 
 class CsvDbModel(CsvModel):
@@ -161,14 +167,18 @@ class CsvImporter(object):
         if not self.delimiter and hasattr(self.csvModel,'Meta') and hasattr(self.csvModel.Meta,'delimiter'):
             self.delimiter = self.csvModel.Meta.delimiter
             
-    def import_from_file(self,filename):
+    def import_from_filename(self,filename):
         csv_file = open(filename)
+        return self.import_from_file(csv_file)
+    
+    def import_from_file(self,csv_file):
         self.get_class_delimiter()
         if not self.delimiter:
             dialect = csv.Sniffer().sniff(csv_file.read(1024))
             self.delimiter = dialect.delimiter
         csv_file.seek(0)
         return self.import_data(csv_file)
+
 
     def __getitem__(self, item):
         return self.lines[item]
