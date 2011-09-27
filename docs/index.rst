@@ -110,9 +110,19 @@ Options :
 
 You can give, as argument, the following options:
 
-- `row_num` : define the position in the file for this field
-- `match` : define the django model name matching this field
-- `transform` : Apply the function before returning the result
+`row_num`
+	define the position in the file for this field
+	
+`match`
+	define the django model name matching this field
+
+`transform`
+	Apply the function before returning the result
+
+`validator`
+	A class which should implement a validate function:
+	def validate(self, value):  and return a Boolean. 
+	This allow to apply some business validation on the object before uploading.
 
 Here is an example of a way to use the transform attribute.
 
@@ -120,14 +130,18 @@ Here is an example of a way to use the transform attribute.
 >>>
 >>>     user  = ForeignKey(transform = lambda user: user.username)
 
-ForeignKey has an additional argument `pk` which allow you to define on which value the object will be retrieved.
+ForeignKey has an additional argument: 
+
+`pk` 
+	allow you to define on which value the object will be retrieved.
 
 
 Meta options
 ------------
 
 `delimiter`
-    define the delimiter of the csv file
+    define the delimiter of the csv file.
+    If you do not set one, the sniffer will try yo find one itself.
 
 `has_header`
     Skip the first line if True
