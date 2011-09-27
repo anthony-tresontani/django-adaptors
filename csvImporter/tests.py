@@ -65,14 +65,6 @@ class TestCsvDBUnmatchingModel(CsvModel):
         dbModel = MyModel
 
 
-class TestCsvWithHeader(TestCsvModel):
-    class Meta:
-        delimiter = ";"
-        has_header = True
-        dbModel = MyModel
-
-    test_data = ["Name;Age;length", "Roger;10;1.8", "Janette;12;1.7"]
-
 
 class TestCsvExitOnFailure(TestCsvModel):
     class Meta:
@@ -90,12 +82,6 @@ class TestCsvDBOnlyModel(CsvDbModel):
         
     test_data = ["Janette;12;1.7","Roger;18;1.8"]
 
-
-class TestCsvDbForeign(CsvModel):
-    foreign = ForeignKey(MyModel)
-    
-    class Meta:
-        dbModel = MyModelWithForeign
         
 class TestCsvDbForeignInvalid(CsvDbModel):
     foreign = ForeignKey(MyModel)
@@ -106,8 +92,8 @@ class TestCsvDbForeignInvalid(CsvDbModel):
 
 class TestCsvImporter(TestCase):
     def test_has_delimiter(self):
-        self.assertTrue(TestCsvModel.has_delimiter())
-        self.assertFalse(TestCsvNoDelimiter.has_delimiter())
+        self.assertTrue(TestCsvModel.has_class_delimiter())
+        self.assertFalse(TestCsvNoDelimiter.has_class_delimiter())
 
     def test_is_db_model(self):
         self.assertFalse(TestCsvModel.is_db_model())
@@ -150,18 +136,18 @@ class TestCsvImporter(TestCase):
             index += 1
 
     def test_real_file(self):
-        test = TestCsvModel.import_data(open("test/csv1.csv", 'r'))
+        test = TestCsvModel.import_from_file("test/csv1.csv")
         line1 = test[0]
         self.assertEquals(line1.nom, 'Roger')
         self.assertEquals(line1.age, 10)
         self.assertEquals(line1.taille, 1.8)
 
     def test_db_model(self):
-        test = TestCsvDBModel.import_data(open("test/csv2.csv", 'r'))
+        test = TestCsvDBModel.import_from_file("test/csv2.csv")
         self.assertEquals(MyModel.objects.all().count(), 2)
 
     def test_db_unmatching_model(self):
-        test = TestCsvDBUnmatchingModel.import_data(open("test/csv1.csv", 'r'))
+        test = TestCsvDBUnmatchingModel.import_from_file("test/csv1.csv")
         self.assertEquals(MyModel.objects.all().count(), 1)
 
     def test_field_unexpected_attributes(self):
@@ -177,6 +163,16 @@ class TestCsvImporter(TestCase):
         self.assertEquals(MyModel.objects.all().count(), 1)
 
     def test_with_header(self):
+        class TestCsvWithHeader(TestCsvModel):
+            class Meta:
+                delimiter = ";"
+                has_header = True
+                dbModel = MyModel
+
+            test_data = ["Name;Age;length", "Roger;10;1.8", "Janette;12;1.7"]
+
+        
+        
         test = TestCsvWithHeader.import_data(TestCsvWithHeader.test_data)
         self.assertEquals(MyModel.objects.all().count(), 2)
         
@@ -189,6 +185,13 @@ class TestCsvImporter(TestCase):
         self.assertEquals(myModel.taille, 1.7)
         
     def test_foreign_key_model(self):
+        class TestCsvDbForeign(CsvModel):
+            foreign = ForeignKey(MyModel)
+    
+            class Meta:
+                dbModel = MyModelWithForeign
+                delimiter = ","
+        
         my_model = MyModel.objects.create(nom="Gigi", age=10, taille= 1.2)
         test = TestCsvDbForeign.import_data(["%d" % my_model.id])
         self.assertEquals(MyModelWithForeign.objects.all().count(), 1)
@@ -203,11 +206,21 @@ class TestCsvImporter(TestCase):
     
             class Meta:
                 dbModel = OtherForeign
+                delimiter = ","
         
         my_model = MyModel.objects.create(nom="Gigi", age=10, taille= 1.2)
         foreign = MyModelWithForeign.objects.create(foreign=my_model)
         test = TestCsvDbForeignFollow.import_data(["%d" % foreign.id] )
         self.assertEquals(my_model, test[0].foreign_csv)
+        
+    def test_import_from_file_sniffer(self):
+        
+        class TestCsvWithHeader(TestCsvModel):
+            class Meta:
+                dbModel = MyModel
+
+        test = TestCsvWithHeader.import_from_file("test/csv3.csv")
+        self.assertEquals(MyModel.objects.all().count(), 23)
 
 class TestFields(TestCase):
     
