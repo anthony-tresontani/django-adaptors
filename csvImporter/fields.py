@@ -1,4 +1,5 @@
 from django.db.models import Model as djangoModel
+from django.core.exceptions import ObjectDoesNotExist
 
 class Field(object):
     position =0
@@ -53,5 +54,9 @@ class ForeignKey(Field):
         super(ForeignKey,self).__init__(**kwargs)
     
     def to_python(self,value):
-        return self.model.objects.get(**{self.pk:value})
+        try:
+            return self.model.objects.get(**{self.pk:value})
+        except ObjectDoesNotExist, e:
+            e.message = "No match found for %s" % self.model
+            raise e
         
