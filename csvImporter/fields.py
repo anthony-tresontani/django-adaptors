@@ -26,7 +26,7 @@ class Field(object):
         try:
             value = self.to_python(value)
             if hasattr(self,"transform"):
-                return self.transform(value)
+                value = self.transform(value)
             if hasattr(self,"validator"):
                 validator = self.validator()
                 if not validator.validate(value):
