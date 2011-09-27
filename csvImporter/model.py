@@ -41,12 +41,8 @@ class CsvModel(object):
                     load_failed = True
                     break
                 else:
-                    print e
                     raise e
-        if self.cls.is_db_model():
-            print "DB model"
         if self.cls.is_db_model() and not load_failed:
-            print "values: %s" % values
             model = self.cls.Meta.dbModel
             model.objects.create(**values)
 
@@ -110,7 +106,6 @@ class CsvDbModel(CsvModel):
                 attrs.append((field.name,field))
         excluded_fields = cls.get_exclusion_fields()
         attrs_filtered = [attr for attr in attrs if attr[0] not in excluded_fields]
-        print "Attributes %s" % attrs_filtered
         return attrs_filtered
     
     @classmethod
@@ -144,23 +139,23 @@ class CsvImporter(object):
                     if not 'value' in value:
                         raise ValueError("If a positional extra argument is defined, a value key should be present.")
                     line.insert(position, value['value'])
-                    print "Extra: %s" % data
 
     def import_data(self,data):
         lines = []
-        has_header_anymore = self.csvModel.has_header()
         self.get_class_delimiter()
+        line_number = 0
         for line in csv.reader(data,delimiter = self.delimiter):
             self.process_extra_fields(data, line)
             try :
                 lines.append(self.csvModel(data=line,delimiter=self.delimiter))
             except ValueError, e:
-                if has_header_anymore:
+                if line_number == 0 and self.csvModel.has_header():
                     pass
                 else:
-                    raise e
-            if has_header_anymore:
-                has_header_anymore = False
+                    raise ValueError("An error occured when loading line %d : %s" % (line_number +1, e.message))
+            except IndexError,e :
+                raise ValueError("Number of fields invalid in line %d" % (line_number + 1))
+            line_number += 1
         return lines
         
     def get_class_delimiter(self):

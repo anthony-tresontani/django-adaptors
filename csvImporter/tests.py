@@ -182,6 +182,7 @@ class TestCsvImporter(TestCase):
         self.assertEquals(MyModel.objects.all().count(), 2)
         myModel = MyModel.objects.all()[0]
         self.assertEquals(myModel.nom, "Janette")
+        
         self.assertEquals(myModel.age, 12)
         self.assertEquals(myModel.taille, 1.7)
         
@@ -222,6 +223,44 @@ class TestCsvImporter(TestCase):
 
         test = TestCsvWithHeader.import_from_filename("test/csv3.csv")
         self.assertEquals(MyModel.objects.all().count(), 23)
+        
+    def test_error_message_foreign(self):
+        class TestCsvDbForeign(CsvModel):
+            foreign = ForeignKey(MyModel)
+    
+            class Meta:
+                dbModel = MyModelWithForeign
+                delimiter = ","
+                
+        test_data_template = "%d,10,1"
+        my_model = MyModel.objects.create(nom="Gigi", age=10, taille= 1.2)
+        data = [test_data_template % my_model.id,test_data_template % (my_model.id +999) ]
+        try:
+            test = TestCsvDbForeign.import_data(data)
+        except ValueError , e:
+            self.assertEquals(e.message, 'An error occured when loading line 2 : No match found for MyModel')
+        else:
+            self.assertTrue(False,"No valueError raised")
+            
+    def test_error_message_too_many_field(self):
+        try:
+            test = TestCsvModel.import_data(['1,error,12'])
+        except ValueError , e:
+            self.assertEquals(e.message, 'Number of fields invalid in line 1')
+        else:
+            self.assertTrue(False,"No valueError raised")
+            
+    def test_error_message_integer_field(self):
+        try:
+            test = TestCsvModel.import_data(['1;error;12'])
+        except ValueError , e:
+            self.assertEquals(e.message, 
+                              "An error occured when loading line 1 : Value 'error' in columns 2 does not match the expected type Integer")
+        else:
+            self.assertTrue(False,"No valueError raised")
+        
+
+        
 
 class TestFields(TestCase):
     
@@ -235,6 +274,17 @@ class TestFields(TestCase):
     def test_foreign_other_pk(self):
         field = ForeignKey(MyModel2,pk="other_pk")
         myModel2 = MyModel2.objects.create(other_pk=10)
+        self.assertEquals(field.to_python(myModel2.other_pk), myModel2)
+        
+    def test_error_message(self):
+        field = ForeignKey(MyModel2,pk="other_pk")
+        myModel2 = MyModel2.objects.create(other_pk=999)
+        try:
+            field.to_python(666)
+        except ValueError, e:
+            self.assertEquals(e.message, 'No match found for MyModel2')
+        else:
+            self.assertTrue(False,"No exception raised")
         self.assertEquals(field.to_python(myModel2.other_pk), myModel2)
         
 class TestImporter(TestCase):

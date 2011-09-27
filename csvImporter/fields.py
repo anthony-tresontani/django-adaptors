@@ -1,6 +1,9 @@
 from django.db.models import Model as djangoModel
 from django.core.exceptions import ObjectDoesNotExist
 
+class FieldError(ValueError):
+    pass
+
 class Field(object):
     position =0
 
@@ -23,24 +26,35 @@ class Field(object):
             if hasattr(self,"transform"):
                 return self.transform(value)
             return value
+        except FieldError, e:
+            raise e
         except ValueError:
-            raise ValueError("Value \'%s\' in columns %d does not match the expected type %s" % (value,self.position+1,self.__class__))
+            raise ValueError("Value \'%s\' in columns %d does not match the expected type %s" % (value,self.position+1,self.__class__.field_name))
 
 
 class IntegerField(Field):
+    
+    field_name = "Integer"
 
     def to_python(self,value):
         return int(value)
 
 class CharField(Field):
+    
+    field_name = "String"
+    
     def to_python(self,value):
         return value
 
 class FloatField(Field):
+    field_name = "A float number"
+    
     def to_python(self,value):
         return float(value)
     
-class ForeignKey(Field): 
+class ForeignKey(Field):
+    field_name = "not defined"
+     
     def __init__(self,*args,**kwargs):
         self.pk = kwargs.pop('pk','pk')
         if len(args)<1:
@@ -57,6 +71,5 @@ class ForeignKey(Field):
         try:
             return self.model.objects.get(**{self.pk:value})
         except ObjectDoesNotExist, e:
-            e.message = "No match found for %s" % self.model
-            raise e
+            raise FieldError("No match found for %s" % self.model.__name__)
         
