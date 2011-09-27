@@ -18,6 +18,7 @@ class CsvDataException(CsvException):
             Exception.__init__(self,u"Line %d: %s" % (self.line + 1,self.error))
         elif self.field_error:
             Exception.__init__(self,u"Line %d: %s" % (self.line + 1,self.field_error))
+            
         
 class CsvModel(object):
 

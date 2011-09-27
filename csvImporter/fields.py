@@ -17,6 +17,8 @@ class Field(object):
             self.match = kwargs.pop('match')
         if 'transform' in kwargs:
             self.transform = kwargs.pop('transform')
+        if 'validator' in kwargs:
+            self.validator = kwargs.pop('validator')
         if len(kwargs)>0:
             raise ValueError("Arguments %s unexpected" % kwargs.keys())
 
@@ -25,6 +27,10 @@ class Field(object):
             value = self.to_python(value)
             if hasattr(self,"transform"):
                 return self.transform(value)
+            if hasattr(self,"validator"):
+                validator = self.validator()
+                if not validator.validate(value):
+                    raise FieldError(validator.__class__.validation_message)
             return value
         except FieldError, e:
             raise e

@@ -1,6 +1,6 @@
 from django.test import TestCase
 from fields import *
-from model import CsvModel, CsvDbModel, ImproperlyConfigured, CsvException
+from model import CsvModel, CsvDbModel, ImproperlyConfigured, CsvException, CsvDataException
 from myTestModel.models import MyModel, MyModel2, MyModelWithForeign, OtherForeign
 
 
@@ -258,6 +258,29 @@ class TestCsvImporter(TestCase):
                                u"Line 1: Value 'error' in columns 2 does not match the expected type Integer" )
         else:
             self.assertTrue(False,"No valueError raised")
+            
+            
+    def test_validator(self):
+        
+        class CsvValidator(CsvModel):
+            
+            class Meta:
+                delimiter = ";"
+                
+            class Validate:
+                validation_message = "Your value should be 10"
+                def validate(self,value):
+                    return value == 10
+                
+            age = IntegerField(validator=Validate)
+            
+        self.assertRaises(CsvDataException, CsvValidator.import_data,['11'])
+        try:
+            CsvValidator.import_data(['10'])
+        except CsvDataException,e :
+            self.assertTrue(False,"No exception should be raised")
+        self.assertTrue(True)
+            
         
 
         
