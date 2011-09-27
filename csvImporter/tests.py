@@ -1,6 +1,6 @@
 from django.test import TestCase
 from fields import *
-from model import CsvModel, CsvDbModel, ImproperlyConfigured
+from model import CsvModel, CsvDbModel, ImproperlyConfigured, CsvException
 from myTestModel.models import MyModel, MyModel2, MyModelWithForeign, OtherForeign
 
 
@@ -237,25 +237,25 @@ class TestCsvImporter(TestCase):
         data = [test_data_template % my_model.id,test_data_template % (my_model.id +999) ]
         try:
             test = TestCsvDbForeign.import_data(data)
-        except ValueError , e:
-            self.assertEquals(e.message, 'An error occured when loading line 2 : No match found for MyModel')
+        except CsvException , e:
+            self.assertEquals(e.message, u'Line 2: No match found for MyModel')
         else:
             self.assertTrue(False,"No valueError raised")
             
     def test_error_message_too_many_field(self):
         try:
             test = TestCsvModel.import_data(['1,error,12'])
-        except ValueError , e:
-            self.assertEquals(e.message, 'Number of fields invalid in line 1')
+        except CsvException , e:
+            self.assertEquals(e.message, u'Line 1: Number of fields invalid')
         else:
             self.assertTrue(False,"No valueError raised")
             
     def test_error_message_integer_field(self):
         try:
             test = TestCsvModel.import_data(['1;error;12'])
-        except ValueError , e:
+        except CsvException , e:
             self.assertEquals(e.message, 
-                              "An error occured when loading line 1 : Value 'error' in columns 2 does not match the expected type Integer")
+                               u"Line 1: Value 'error' in columns 2 does not match the expected type Integer" )
         else:
             self.assertTrue(False,"No valueError raised")
         

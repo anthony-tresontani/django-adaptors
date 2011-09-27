@@ -1,5 +1,4 @@
 import csv
-
 from django.db.models.fields import Field as DjangoField
 from fields import Field
 from django.core.exceptions import ValidationError
@@ -7,6 +6,19 @@ from django.core.exceptions import ValidationError
 class ImproperlyConfigured(Exception):
     pass
 
+class CsvException(Exception):
+    pass
+        
+class CsvDataException(CsvException):
+    def __init__(self, line, error=None ,field_error=None):
+        self.line = line
+        self.error = error
+        self.field_error = field_error
+        if self.error:
+            Exception.__init__(self,u"Line %d: %s" % (self.line + 1,self.error))
+        elif self.field_error:
+            Exception.__init__(self,u"Line %d: %s" % (self.line + 1,self.field_error))
+        
 class CsvModel(object):
 
     def get_fields(self):
@@ -137,7 +149,7 @@ class CsvImporter(object):
                 if isinstance(value, dict):
                     position = value.get('position', len(data) + extra_field_index)
                     if not 'value' in value:
-                        raise ValueError("If a positional extra argument is defined, a value key should be present.")
+                        raise CsvException("If a positional extra argument is defined, a value key should be present.")
                     line.insert(position, value['value'])
 
     def import_data(self,data):
@@ -152,9 +164,9 @@ class CsvImporter(object):
                 if line_number == 0 and self.csvModel.has_header():
                     pass
                 else:
-                    raise ValueError("An error occured when loading line %d : %s" % (line_number +1, e.message))
+                    raise CsvDataException(line_number, field_error =  e.message)
             except IndexError,e :
-                raise ValueError("Number of fields invalid in line %d" % (line_number + 1))
+                raise CsvDataException(line_number, error = "Number of fields invalid")
             line_number += 1
         return lines
         
