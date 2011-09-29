@@ -18,3 +18,8 @@ class MyModelWithForeign(models.Model):
 class OtherForeign(models.Model):
     
     foreign = models.ForeignKey(MyModel)
+    
+class MultipleModel(models.Model):
+    
+    nom = models.CharField(max_length=100)
+    note = models.IntegerField()

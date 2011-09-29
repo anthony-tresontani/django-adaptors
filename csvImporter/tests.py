@@ -1,7 +1,7 @@
 from django.test import TestCase
 from fields import *
-from model import CsvModel, CsvDbModel, ImproperlyConfigured, CsvException, CsvDataException
-from myTestModel.models import MyModel, MyModel2, MyModelWithForeign, OtherForeign
+from model import CsvModel, CsvDbModel, ImproperlyConfigured, CsvException, CsvDataException, TabularLayout
+from myTestModel.models import MyModel, MyModel2, MyModelWithForeign, OtherForeign, MultipleModel
 
 
 class TestCsvModel(CsvModel):
@@ -238,7 +238,7 @@ class TestCsvImporter(TestCase):
         try:
             test = TestCsvDbForeign.import_data(data)
         except CsvException , e:
-            self.assertEquals(e.message, u'Line 2: No match found for MyModel')
+            self.assertEquals(e.message, u'Line 1: No match found for MyModel')
         else:
             self.assertTrue(False,"No valueError raised")
             
@@ -280,7 +280,42 @@ class TestCsvImporter(TestCase):
         except CsvDataException,e :
             self.assertTrue(False,"No exception should be raised")
         self.assertTrue(True)
+        
+        
+        
+    def test_multiple_fields(self):
+        
+        class CsvMultiple(CsvModel):
             
+            nom = CharField()
+            note = IntegerField(multiple = True)
+            
+            class Meta:
+                delimiter = ";"
+                dbModel = MultipleModel
+                
+        test_data = ["josette;18;12;8"]
+            
+        test = CsvMultiple.import_data(test_data)
+        self.assertEquals(MultipleModel.objects.count(),3)
+        
+    
+    def test_tabular_layout(self):
+        
+        class CsvTabular(CsvModel):
+            
+            nom = CharField()
+            age = IntegerField()
+            taille = FloatField()
+            
+            class Meta:
+                delimiter = ";"
+                layout = TabularLayout
+                dbModel = MyModel
+                
+        test_data = [";8;12;18","Janette;1.2;1.4;1.6","popeye;0.8;1.0;1.3"]
+        test = CsvTabular.import_data(test_data)
+        self.assertEquals(MyModel.objects.all().count(),6)
         
 
         

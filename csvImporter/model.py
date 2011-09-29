@@ -31,6 +31,28 @@ class CsvModel(object):
         sorted_field = sorted(attributes,key=lambda attrs: attrs[1].position)
         return sorted_field
 
+
+    def get_value(self, attr_name, field, value):
+        self.__dict__[attr_name] = field.get_prep_value(value)
+        self.field_matching_name = field.__dict__.get("match", attr_name)
+#        values[field_matching_name] = field.get_prep_value(value)
+        return field.get_prep_value(value)
+
+
+
+    def create_model_instance(self, values):
+        model = self.cls.Meta.dbModel
+        if self.multiple_creation_field:
+            if self.multiple_creation_field:
+                multiple_values = values.pop(self.multiple_creation_field)
+                for value in multiple_values:
+                    dict_values = values.copy()
+                    dict_values[self.multiple_creation_field] = value
+                    model.objects.create(**dict_values)
+                    
+        else:
+            model.objects.create(**values)
+
     def __init__(self,data,delimiter=None):
         self.delimiter = delimiter
         self.cls = self.__class__
@@ -39,6 +61,7 @@ class CsvModel(object):
         values = {}
         silent_failure = self.cls.silent_failure()
         load_failed = False
+        self.multiple_creation_field = None
         for (attr_name,field),position in zip(self.attrs,range(len(self.attrs))):
             field.position = position
             if self.cls.has_class_delimiter() or delimiter:
@@ -46,9 +69,15 @@ class CsvModel(object):
             else:
                 value = data[0]
             try:
-                self.__dict__[attr_name] = field.get_prep_value(value)
-                field_matching_name = field.__dict__.get("match",attr_name)
-                values[field_matching_name] = field.get_prep_value(value)
+                if hasattr(field,'has_multiple') and field.has_multiple:
+                    remaining_data = data[position:]
+                    multiple_values = []
+                    for data in remaining_data:
+                        multiple_values.append(self.get_value(attr_name, field, data))
+                    values[self.field_matching_name] = multiple_values
+                    self.multiple_creation_field = self.field_matching_name
+                else:
+                    values[self.field_matching_name] = self.get_value(attr_name, field, value)
             except ValueError,e :
                 if silent_failure:
                     load_failed = True
@@ -56,8 +85,7 @@ class CsvModel(object):
                 else:
                     raise e
         if self.cls.is_db_model() and not load_failed:
-            model = self.cls.Meta.dbModel
-            model.objects.create(**values)
+            self.create_model_instance(values)
 
     def validate(self):
         if len(self.attrs)==0:
@@ -130,14 +158,41 @@ class CsvDbModel(CsvModel):
             list_exclusion.append('id')
         return list_exclusion
             
-
+class LinearLayout(object):
+    
+    def process_line(self, lines, line, model,delimiter):
+        lines.append(model(data=line,delimiter=delimiter))
+        
+class TabularLayout(object):
+    
+    def __init__(self):
+        self.line_no = 0
+        self.column_no = 1
+        self.headers = None
+    
+    def process_line(self, lines, line, model,delimiter):
+        if self.line_no == 0:
+            self.headers = line
+            self.line_no += 1
+        else:
+            for data in line[1:]:
+                inline_data = [line[0],self.headers[self.column_no],data]
+                lines.append(model(data=inline_data,delimiter=delimiter))
+                self.column_no += 1
+            self.column_no = 1
+            
 class CsvImporter(object):
 
-    def __init__(self,csvModel,extra_fields=[]):
+    def __init__(self,csvModel,extra_fields=[],layout = None):
         self.csvModel = csvModel
         self.extra_fields = extra_fields
         self.dialect = None
         self.delimiter = None
+        if not layout:
+            if hasattr(self.csvModel,'Meta') and hasattr(self.csvModel.Meta,'layout'):
+                self.layout = self.csvModel.Meta.layout()
+            else:
+                self.layout = LinearLayout()
         
 
     def process_extra_fields(self, data, line):
@@ -158,18 +213,24 @@ class CsvImporter(object):
         self.get_class_delimiter()
         line_number = 0
         for line in csv.reader(data,delimiter = self.delimiter):
-            self.process_extra_fields(data, line)
-            try :
-                lines.append(self.csvModel(data=line,delimiter=self.delimiter))
-            except ValueError, e:
-                if line_number == 0 and self.csvModel.has_header():
-                    pass
-                else:
-                    raise CsvDataException(line_number, field_error =  e.message)
-            except IndexError,e :
-                raise CsvDataException(line_number, error = "Number of fields invalid")
-            line_number += 1
+            self.process_line(data, line, lines, line_number)
         return lines
+        
+        
+    def process_line(self,data,line,lines,line_number):
+        self.process_extra_fields(data, line)
+        try :
+#            lines.append(self.csvModel(data=line,delimiter=self.delimiter))
+            self.layout.process_line(lines,line, self.csvModel,delimiter=self.delimiter)
+        except ValueError, e:
+            if line_number == 0 and self.csvModel.has_header():
+                pass
+            else:
+                raise CsvDataException(line_number, field_error =  e.message)
+        except IndexError,e :
+            raise CsvDataException(line_number, error = "Number of fields invalid")
+        line_number += 1
+        
         
     def get_class_delimiter(self):
         if not self.delimiter and hasattr(self.csvModel,'Meta') and hasattr(self.csvModel.Meta,'delimiter'):

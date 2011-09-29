@@ -19,6 +19,8 @@ class Field(object):
             self.transform = kwargs.pop('transform')
         if 'validator' in kwargs:
             self.validator = kwargs.pop('validator')
+        if 'multiple' in kwargs:
+            self.has_multiple = kwargs.pop('multiple')
         if len(kwargs)>0:
             raise ValueError("Arguments %s unexpected" % kwargs.keys())
 
