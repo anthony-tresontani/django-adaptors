@@ -6,7 +6,7 @@ def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 setup(name='csvImporter',
-      version='0.1',
+      version='0.1.1',
       description='Convert csv files into python object or django model',
       author='Anthony Tresontani',
       author_email='dev.tresontani@gmail.com',
