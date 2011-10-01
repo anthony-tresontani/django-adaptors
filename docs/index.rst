@@ -172,3 +172,11 @@ Importer option
 
 When importing data, you can add an optional argument `extra_fields` which is a string or a list.
 This allow to add a value to any line of the csv file before the loading.
+
+
+
+Any Questions
+-------------
+
+For any question, you can contact my at csv.tresontani@gmail.com
+For any question, you can contact my at csv.tresontani@gmail.com
