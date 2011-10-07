@@ -220,6 +220,7 @@ class CsvImporter(object):
         line_number = 0
         for line in csv.reader(data,delimiter = self.delimiter):
             self.process_line(data, line, lines, line_number)
+            line_number += 1
         return lines
         
         
@@ -237,7 +238,7 @@ class CsvImporter(object):
                 raise CsvDataException(line_number, field_error =  e.message)
         except IndexError,e :
             raise CsvDataException(line_number, error = "Number of fields invalid")
-        line_number += 1
+        
         
         
     def get_class_delimiter(self):
