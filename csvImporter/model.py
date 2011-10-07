@@ -1,6 +1,6 @@
 import csv
 from django.db.models.fields import Field as DjangoField
-from fields import Field
+from fields import Field, ForeignKeyFieldError
 from django.core.exceptions import ValidationError
 
 class ImproperlyConfigured(Exception):
@@ -18,6 +18,12 @@ class CsvDataException(CsvException):
             Exception.__init__(self,u"Line %d: %s" % (self.line + 1,self.error))
         elif self.field_error:
             Exception.__init__(self,u"Line %d: %s" % (self.line + 1,self.field_error))
+            
+class CsvFieldDataException(CsvDataException):
+    def __init__(self, line, field_error, model, value):
+        self.model = model
+        self.value = value
+        CsvDataException.__init__(self,line, field_error=field_error)
             
         
 class CsvModel(object):
@@ -222,6 +228,8 @@ class CsvImporter(object):
         try :
 #            lines.append(self.csvModel(data=line,delimiter=self.delimiter))
             self.layout.process_line(lines,line, self.csvModel,delimiter=self.delimiter)
+        except ForeignKeyFieldError, e:
+            raise CsvFieldDataException(line_number, field_error =  e.message, model = e.model, value = e.value)
         except ValueError, e:
             if line_number == 0 and self.csvModel.has_header():
                 pass

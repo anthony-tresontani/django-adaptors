@@ -4,6 +4,14 @@ from django.core.exceptions import ObjectDoesNotExist
 class FieldError(ValueError):
     pass
 
+class ForeignKeyFieldError(FieldError):
+    
+    def __init__(self,msg, model,value):
+        self.model = model
+        self.value = value
+        self.msg = msg
+        super(ForeignKeyFieldError,self).__init__(self.msg)
+
 class Field(object):
     position =0
 
@@ -79,5 +87,5 @@ class ForeignKey(Field):
         try:
             return self.model.objects.get(**{self.pk:value})
         except ObjectDoesNotExist, e:
-            raise FieldError("No match found for %s" % self.model.__name__)
+            raise ForeignKeyFieldError("No match found for %s" % self.model.__name__, self.model.__name__, value)
         
