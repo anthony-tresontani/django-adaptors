@@ -11,13 +11,13 @@ class CsvException(Exception):
         
 class CsvDataException(CsvException):
     def __init__(self, line, error=None ,field_error=None):
-        self.line = line
+        self.line = line + 1
         self.error = error
         self.field_error = field_error
         if self.error:
-            Exception.__init__(self,u"Line %d: %s" % (self.line + 1,self.error))
+            Exception.__init__(self,u"Line %d: %s" % (self.line ,self.error))
         elif self.field_error:
-            Exception.__init__(self,u"Line %d: %s" % (self.line + 1,self.field_error))
+            Exception.__init__(self,u"Line %d: %s" % (self.line ,self.field_error))
             
 class CsvFieldDataException(CsvDataException):
     def __init__(self, line, field_error, model, value):
