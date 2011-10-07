@@ -124,6 +124,9 @@ You can give, as argument, the following options:
 	def validate(self, value):  and return a Boolean. 
 	This allow to apply some business validation on the object before uploading.
 
+`multiple`
+    Allow a field to read as many values as the number of remaining data on the line.
+    
 Here is an example of a way to use the transform attribute.
 
 >>> class MyCsvModel(CsvModel):
@@ -155,8 +158,25 @@ Meta options
 `exclude`
     CsvDbModel only. To do take into account the django field of the django model defined in this list
 
+`layout`
+    Set it to LinearLayout ( by default ) or Tabular Layout. Modify the way your data are organised in
+    the file. Tabular read:
+        B1  B2  B3
+    A1  C1  C2  C3
+    A2  C4  C5  C6    --> (A1,B1,C1), (A1,B2,C2), (A1,B3,C3), (A2,B1,C4) ...
+    A3  C7  C8  C9
+
+
 Importer option
 ---------------
 
 When importing data, you can add an optional argument `extra_fields` which is a string or a list.
 This allow to add a value to any line of the csv file before the loading.
+
+
+
+Any Questions
+-------------
+
+For any question, you can contact my at csv.tresontani@gmail.com
+For any question, you can contact my at csv.tresontani@gmail.com
