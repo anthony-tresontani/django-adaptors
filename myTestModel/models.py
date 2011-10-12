@@ -23,3 +23,15 @@ class MultipleModel(models.Model):
     
     nom = models.CharField(max_length=100)
     note = models.IntegerField()
+    
+class ComposedKeyForeign(models.Model):
+    
+    key_1 = models.PositiveIntegerField()
+    key_2 = models.PositiveIntegerField()
+
+class ComposedKey(models.Model):
+    
+    composed_key_foreign = models.ForeignKey(ComposedKeyForeign)
+    
+
+    

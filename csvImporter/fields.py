@@ -31,6 +31,8 @@ class Field(object):
             self.has_multiple = kwargs.pop('multiple')
         if 'prepare' in kwargs:
             self.prepare = kwargs.pop('prepare')
+        if 'keys' in kwargs and isinstance(self,ComposedKeyField):
+            self.keys = kwargs.pop('keys')
         if len(kwargs)>0:
             raise ValueError("Arguments %s unexpected" % kwargs.keys())
 
@@ -70,7 +72,7 @@ class FloatField(Field):
     field_name = "A float number"
     
     def to_python(self,value):
-        return float(value)
+        return float(value) 
 
 class IgnoredField(Field):
     field_name = "Ignore the value"
@@ -100,3 +102,12 @@ class ForeignKey(Field):
         except ObjectDoesNotExist, e:
             raise ForeignKeyFieldError("No match found for %s" % self.model.__name__, self.model.__name__, value)
         
+
+class ComposedKeyField(ForeignKey):
+    
+      def to_python(self,value):
+        try:
+            return self.model.objects.get(**value)
+        except ObjectDoesNotExist, e:
+            raise ForeignKeyFieldError("No match found for %s" % self.model.__name__, self.model.__name__, value)    
+            

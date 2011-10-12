@@ -1,6 +1,6 @@
 import csv
 from django.db.models.fields import Field as DjangoField
-from fields import Field, ForeignKeyFieldError, IgnoredField
+from fields import Field, ForeignKeyFieldError, IgnoredField, ComposedKeyField
 from django.core.exceptions import ValidationError
 
 class ImproperlyConfigured(Exception):
@@ -70,10 +70,16 @@ class CsvModel(object):
         silent_failure = self.cls.silent_failure()
         load_failed = False
         self.multiple_creation_field = None
+        composed_fields = []
+        index_offset = 0
         for (attr_name,field),position in zip(self.attrs,range(len(self.attrs))):
             field.position = position
+            if isinstance(field, ComposedKeyField):
+                    composed_fields.append(field)
+                    index_offset += 1
+                    continue
             if self.cls.has_class_delimiter() or delimiter:
-                value = data[position]
+                value = data[position - index_offset]
             else:
                 value = data[0]
             try:
@@ -95,6 +101,11 @@ class CsvModel(object):
                 else:
                     raise e
         if self.cls.is_db_model() and not load_failed:
+            for field in composed_fields:
+                keys = {}
+                for key in field.keys:
+                    keys[key]=values.pop(key)
+                values[self.field_matching_name] = self.get_value(attr_name, field, keys)
             self.create_model_instance(values)
 
     def validate(self):

@@ -106,6 +106,7 @@ Fields available are:
 - **CharField** : return a string
 - **ForeignKey** : return a django model object
 - **IgnoredField** : skip the value
+- **ComposedKeyForeign** : return a django model object retrieve with multiple values as keys.
 
 Options :
 
@@ -130,6 +131,9 @@ You can give, as argument, the following options:
 
 `multiple`
     Allow a field to read as many values as the number of remaining data on the line.
+    
+`keys`
+	A list of fields which composed the key. Only for **ComposedKeyForeign**
     
 Here is an example of a way to use the transform attribute.
 

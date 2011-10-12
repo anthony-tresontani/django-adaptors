@@ -1,7 +1,7 @@
 from django.test import TestCase
 from fields import *
 from model import CsvModel, CsvDbModel, ImproperlyConfigured, CsvException, CsvDataException, TabularLayout, SkipRow
-from myTestModel.models import MyModel, MyModel2, MyModelWithForeign, OtherForeign, MultipleModel
+from myTestModel.models import *
 
 
 class TestCsvModel(CsvModel):
@@ -373,8 +373,25 @@ class TestCsvImporter(TestCase):
         test_data = ["Janette;12;1.7","Roger;18;1.8"]
         test = SkipRowCsv.import_data(test_data)
         self.assertEquals(MyModel.objects.all().count(),1)
-            
         
+    def test_multiple_key_foreign(self):
+        
+        class ComposedForeignKeyCsv(CsvModel):
+            key_1 = IntegerField()
+            key_2 = IntegerField()
+            composed_key_foreign = ComposedKeyField(ComposedKeyForeign,keys=["key_1","key_2"])
+            
+            class Meta:
+                delimiter = ";"
+                dbModel = ComposedKey
+                
+        c0 = ComposedKeyForeign.objects.create(key_1=1, key_2=1)
+        c1 = ComposedKeyForeign.objects.create(key_1=1, key_2=2)
+        test_data = ["1;1","1;2"]
+        test = ComposedForeignKeyCsv.import_data(test_data)
+        self.assertEquals(c0, test[0].composed_key_foreign)
+        self.assertEquals(c1, test[1].composed_key_foreign)
+                
 
 class TestFields(TestCase):
     
