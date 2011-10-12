@@ -71,6 +71,13 @@ class FloatField(Field):
     
     def to_python(self,value):
         return float(value)
+
+class IgnoredField(Field):
+    field_name = "Ignore the value"
+    
+    def to_python(self,value):
+        return None
+ 
     
 class ForeignKey(Field):
     field_name = "not defined"

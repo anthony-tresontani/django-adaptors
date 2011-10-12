@@ -1,6 +1,6 @@
 import csv
 from django.db.models.fields import Field as DjangoField
-from fields import Field, ForeignKeyFieldError
+from fields import Field, ForeignKeyFieldError, IgnoredField
 from django.core.exceptions import ValidationError
 
 class ImproperlyConfigured(Exception):
@@ -75,6 +75,8 @@ class CsvModel(object):
             else:
                 value = data[0]
             try:
+                if isinstance(field, IgnoredField):
+                    continue
                 if hasattr(field,'has_multiple') and field.has_multiple:
                     remaining_data = data[position:]
                     multiple_values = []

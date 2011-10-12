@@ -337,6 +337,24 @@ class TestCsvImporter(TestCase):
         self.assertEquals(test[0].nom, "JANETTE")
         self.assertEquals(test[1].nom, "ROGER")
         
+    def test_ignore_field(self):
+        
+        class IgnoreCsv(CsvModel):
+            nom = CharField()
+            ignored = IgnoredField()
+            age = IntegerField()
+            taille = FloatField()
+            
+             
+            class Meta:
+                delimiter = ";"
+                dbModel = MyModel
+            
+        test_data = ["Janette;Dont care;12;1.7","Roger;Dont care;18;1.8"]
+        test = IgnoreCsv.import_data(test_data)
+        self.assertEquals(MyModel.objects.all().count(),2)
+            
+        
 
 class TestFields(TestCase):
     

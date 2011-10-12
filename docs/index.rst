@@ -105,6 +105,7 @@ Fields available are:
 - **FloatField** : return a float
 - **CharField** : return a string
 - **ForeignKey** : return a django model object
+- **IgnoredField** : skip the value
 
 Options :
 
@@ -150,19 +151,19 @@ Meta options
     If you do not set one, the sniffer will try yo find one itself.
 
 `has_header`
-    Skip the first line if True
+    Skip the first line if True.
 
 `dbModel`
-    If defined, the importer will create an instance of this model
+    If defined, the importer will create an instance of this model.
 
 `silent_failure`
-    If set to True, an error in a imported line will not stop the loading
+    If set to True, an error in a imported line will not stop the loading.
 
 `exclude`
-    CsvDbModel only. To do take into account the django field of the django model defined in this list
+    CsvDbModel only. To do take into account the django field of the django model defined in this list.
 
 `layout`
-    Set it to LinearLayout ( by default ) or Tabular Layout. Modify the way your data are organised in
+    Set it to LinearLayout ( by default ) or Tabular Layout. Modify the way your data are organised in.22
     the file. Tabular read:
         B1  B2  B3
     A1  C1  C2  C3
