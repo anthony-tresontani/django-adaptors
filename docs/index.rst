@@ -111,13 +111,16 @@ Options :
 You can give, as argument, the following options:
 
 `row_num`
-	define the position in the file for this field
+	define the position in the file for this field.
 	
 `match`
-	define the django model name matching this field
+	define the django model name matching this field.
 
 `transform`
-	Apply the function before returning the result
+	Apply the function before returning the result.
+	
+`prepare`
+	Apply the function on the raw value (still a string).
 
 `validator`
 	A class which should implement a validate function:
