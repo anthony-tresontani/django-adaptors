@@ -24,6 +24,8 @@ class CsvFieldDataException(CsvDataException):
         self.model = model
         self.value = value
         CsvDataException.__init__(self,line, field_error=field_error)
+        
+class SkipRow(Exception): pass
             
         
 class CsvModel(object):
@@ -231,6 +233,8 @@ class CsvImporter(object):
         try :
 #            lines.append(self.csvModel(data=line,delimiter=self.delimiter))
             self.layout.process_line(lines,line, self.csvModel,delimiter=self.delimiter)
+        except SkipRow:
+            pass
         except ForeignKeyFieldError, e:
             raise CsvFieldDataException(line_number, field_error =  e.message, model = e.model, value = e.value)
         except ValueError, e:

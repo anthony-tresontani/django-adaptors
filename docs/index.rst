@@ -142,6 +142,7 @@ ForeignKey has an additional argument:
 `pk` 
 	allow you to define on which value the object will be retrieved.
 
+You can also skip a row during ``prepare``, ``transform`` or in a ``validator`` by raising a SkipRow exception.
 
 Meta options
 ------------

@@ -1,6 +1,6 @@
 from django.test import TestCase
 from fields import *
-from model import CsvModel, CsvDbModel, ImproperlyConfigured, CsvException, CsvDataException, TabularLayout
+from model import CsvModel, CsvDbModel, ImproperlyConfigured, CsvException, CsvDataException, TabularLayout, SkipRow
 from myTestModel.models import MyModel, MyModel2, MyModelWithForeign, OtherForeign, MultipleModel
 
 
@@ -353,6 +353,26 @@ class TestCsvImporter(TestCase):
         test_data = ["Janette;Dont care;12;1.7","Roger;Dont care;18;1.8"]
         test = IgnoreCsv.import_data(test_data)
         self.assertEquals(MyModel.objects.all().count(),2)
+        
+    def test_skip_row(self):
+        
+        def skip_janette(name):
+            if name == "Janette":
+                raise SkipRow()
+            return name
+        
+        class SkipRowCsv(CsvModel):
+            nom = CharField(prepare=skip_janette)
+            age = IntegerField()
+            taille = FloatField()
+            
+            class Meta:
+                delimiter = ";"
+                dbModel = MyModel
+            
+        test_data = ["Janette;12;1.7","Roger;18;1.8"]
+        test = SkipRowCsv.import_data(test_data)
+        self.assertEquals(MyModel.objects.all().count(),1)
             
         
 
