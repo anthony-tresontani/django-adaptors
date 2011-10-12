@@ -238,7 +238,7 @@ class TestCsvImporter(TestCase):
         try:
             test = TestCsvDbForeign.import_data(data)
         except CsvException , e:
-            self.assertEquals(e.message, u'Line 1: No match found for MyModel')
+            self.assertEquals(e.message, u'Line 2: No match found for MyModel')
         else:
             self.assertTrue(False,"No valueError raised")
             
@@ -317,7 +317,25 @@ class TestCsvImporter(TestCase):
         test = CsvTabular.import_data(test_data)
         self.assertEquals(MyModel.objects.all().count(),6)
         
-
+    def test_prepare(self):
+        
+        def upper(name):
+            return name.upper()
+        
+        class CsvPrepare(CsvModel):
+            
+            nom = CharField(prepare=upper)
+            age = IntegerField()
+            taille = FloatField()
+            
+            class Meta:
+                delimiter = ";"
+                dbModel = MyModel
+        
+        test_data = ["Janette;12;1.7","Roger;18;1.8"]
+        test = CsvPrepare.import_data(test_data)
+        self.assertEquals(test[0].nom, "JANETTE")
+        self.assertEquals(test[1].nom, "ROGER")
         
 
 class TestFields(TestCase):

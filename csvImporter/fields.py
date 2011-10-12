@@ -29,11 +29,15 @@ class Field(object):
             self.validator = kwargs.pop('validator')
         if 'multiple' in kwargs:
             self.has_multiple = kwargs.pop('multiple')
+        if 'prepare' in kwargs:
+            self.prepare = kwargs.pop('prepare')
         if len(kwargs)>0:
             raise ValueError("Arguments %s unexpected" % kwargs.keys())
 
     def get_prep_value(self,value):
         try:
+            if hasattr(self,"prepare"):
+                value = self.prepare(value)
             value = self.to_python(value)
             if hasattr(self,"transform"):
                 value = self.transform(value)
