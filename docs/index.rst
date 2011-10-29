@@ -174,6 +174,11 @@ Meta options
     A1  C1  C2  C3
     A2  C4  C5  C6    --> (A1,B1,C1), (A1,B2,C2), (A1,B3,C3), (A2,B1,C4) ...
     A3  C7  C8  C9
+    
+`update`
+	Set as a dictionnary with the 'keys' value defining the list of 'natural keys'.
+	If the value is found, update instead of creating a new object.
+	If the value is not found, create a new object.
 
 
 Importer option
@@ -187,5 +192,4 @@ This allow to add a value to any line of the csv file before the loading.
 Any Questions
 -------------
 
-For any question, you can contact my at csv.tresontani@gmail.com
 For any question, you can contact my at csv.tresontani@gmail.com
