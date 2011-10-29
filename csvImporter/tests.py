@@ -391,6 +391,25 @@ class TestCsvImporter(TestCase):
         test = ComposedForeignKeyCsv.import_data(test_data)
         self.assertEquals(c0, test[0].composed_key_foreign)
         self.assertEquals(c1, test[1].composed_key_foreign)
+
+    def test_update(self):
+        
+        class TestUpdateCsv(CsvModel):
+            nom = CharField()
+            age = IntegerField()
+            taille = FloatField()
+            
+            class Meta:
+                dbModel = MyModel
+                delimiter = ";"
+                update = {'keys':["nom","age"]} 
+                
+        test_data = ["Janette;12;1.0","Janette;12;2.0"]
+        self.assertEquals(MyModel.objects.count(),0)
+        test = TestUpdateCsv.import_data(test_data)
+        self.assertEquals(MyModel.objects.count(),1)
+        self.assertEquals(MyModel.objects.all()[0].taille, 2.0)
+
                 
 
 class TestFields(TestCase):
@@ -455,7 +474,7 @@ class TestImporter(TestCase):
         self.assertEquals(test[0].extra_value, "extra")
         self.assertEquals(test[1].extra_value, "extra")
         
-        
+            
 
         
 

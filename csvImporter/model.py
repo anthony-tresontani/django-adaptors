@@ -47,6 +47,31 @@ class CsvModel(object):
         return field.get_prep_value(value)
 
 
+    def base_create_model(self, model, **dict_values):
+        if self.cls.has_update_method():
+            keys = None
+            try:
+                keys = self.cls.Meta.update['keys']
+            except KeyError:
+                raise ImproperlyConfigured("The update dict should contains a keys value")
+            filter_values = {}
+            for key in keys:
+                filter_values.update({key:dict_values[key]})
+            object = None
+            try:
+                object = model.objects.get(**filter_values)
+            except model.DoesNotExist:
+                object = model.objects.create(**dict_values)
+            except model.MultipleObjectsReturned:
+                raise ImproperlyConfigured("Multiple values returned for the update key %s. Keys provide are not unique" % filter_values)
+            else:
+                for field_name in dict_values:
+                    attr = setattr(object, field_name, dict_values[field_name])
+                object.save()
+            model.objects.get()
+        else:
+            model.objects.create(**dict_values)
+
 
     def create_model_instance(self, values):
         model = self.cls.Meta.dbModel
@@ -56,10 +81,10 @@ class CsvModel(object):
                 for value in multiple_values:
                     dict_values = values.copy()
                     dict_values[self.multiple_creation_field] = value
-                    model.objects.create(**dict_values)
+                    self.base_create_model( model, **dict_values)
                     
         else:
-            model.objects.create(**values)
+            self.base_create_model( model, **values)
 
     def __init__(self,data,delimiter=None):
         self.delimiter = delimiter
@@ -127,6 +152,13 @@ class CsvModel(object):
     def has_header(cls):
         return hasattr(cls,"Meta") and hasattr(cls.Meta,"has_header") and cls.Meta.has_header
     
+    @classmethod
+    def has_update_method(cls):
+        has_update = hasattr(cls,"Meta") and hasattr(cls.Meta,"update")
+        if has_update and not cls.is_db_model():
+            raise ImproperlyConfigured("You should define a model when using the update option")
+        return has_update
+        
     @classmethod
     def silent_failure(cls):
         if not hasattr(cls,"Meta") or not hasattr(cls.Meta,"silent_failure"):
