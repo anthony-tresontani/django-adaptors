@@ -409,6 +409,26 @@ class TestCsvImporter(TestCase):
         test = TestUpdateCsv.import_data(test_data)
         self.assertEquals(MyModel.objects.count(),1)
         self.assertEquals(MyModel.objects.all()[0].taille, 2.0)
+        
+    def test_update_only(self):
+        
+        class TestUpdateOnlyCsv(CsvModel):
+            nom = CharField()
+            age = IntegerField()
+            taille = FloatField()
+            poids = FloatField()
+            
+            class Meta:
+                dbModel = MyModelBis
+                delimiter = ";"
+                update = {'keys':["nom","age"],'update':['poids']} 
+                
+        test_data = ["Janette;12;1.0;1.0","Janette;12;2.0;2.0"]
+        self.assertEquals(MyModelBis.objects.count(),0)
+        test = TestUpdateOnlyCsv.import_data(test_data)
+        self.assertEquals(MyModelBis.objects.count(),1)
+        self.assertEquals(MyModelBis.objects.all()[0].taille, 1.0)
+        self.assertEquals(MyModelBis.objects.all()[0].poids, 2.0)
 
                 
 

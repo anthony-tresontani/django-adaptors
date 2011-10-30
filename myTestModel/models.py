@@ -33,5 +33,12 @@ class ComposedKey(models.Model):
     
     composed_key_foreign = models.ForeignKey(ComposedKeyForeign)
     
+class MyModelBis(models.Model):
+
+    nom = models.CharField(max_length=15)
+    age = models.IntegerField()
+    taille = models.FloatField()
+    poids = models.FloatField()
+
 
     

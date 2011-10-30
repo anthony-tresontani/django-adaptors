@@ -47,11 +47,26 @@ class CsvModel(object):
         return field.get_prep_value(value)
 
 
+
+    def update_object(self, dict_values, object, update_dict):
+        new_dict_values = {}
+        if 'update' in update_dict:
+            # Update the object for the value un update_dict['update']
+            # only
+            for field_name in update_dict['update']:
+                new_dict_values[field_name] = dict_values[field_name]
+        else:
+            new_dict_values = dict_values
+        for field_name in new_dict_values:
+            attr = setattr(object, field_name, new_dict_values[field_name])
+        object.save()
+
     def base_create_model(self, model, **dict_values):
         if self.cls.has_update_method():
             keys = None
+            update_dict = self.cls.Meta.update
             try:
-                keys = self.cls.Meta.update['keys']
+                keys = update_dict['keys']
             except KeyError:
                 raise ImproperlyConfigured("The update dict should contains a keys value")
             filter_values = {}
@@ -65,9 +80,7 @@ class CsvModel(object):
             except model.MultipleObjectsReturned:
                 raise ImproperlyConfigured("Multiple values returned for the update key %s. Keys provide are not unique" % filter_values)
             else:
-                for field_name in dict_values:
-                    attr = setattr(object, field_name, dict_values[field_name])
-                object.save()
+                self.update_object(dict_values, object, update_dict)
             model.objects.get()
         else:
             model.objects.create(**dict_values)
