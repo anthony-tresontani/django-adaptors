@@ -107,6 +107,7 @@ Fields available are:
 - **ForeignKey** : return a django model object
 - **IgnoredField** : skip the value
 - **ComposedKeyForeign** : return a django model object retrieve with multiple values as keys.
+- **BooleanField** : return a boolean
 
 Options :
 
@@ -133,7 +134,10 @@ You can give, as argument, the following options:
     Allow a field to read as many values as the number of remaining data on the line.
     
 `keys`
-	A list of fields which composed the key. Only for **ComposedKeyForeign**
+	A list of fields which composed the key. Only for **ComposedKeyForeign**.
+	
+`is_true`
+	a function which determine when a boolean is True. Only for **BooleanField**.
     
 Here is an example of a way to use the transform attribute.
 

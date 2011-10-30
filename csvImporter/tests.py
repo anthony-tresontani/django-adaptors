@@ -430,7 +430,37 @@ class TestCsvImporter(TestCase):
         self.assertEquals(MyModelBis.objects.all()[0].taille, 1.0)
         self.assertEquals(MyModelBis.objects.all()[0].poids, 2.0)
 
+
+    def test_update_and_extra(self):
+        
+        class TestUpdateOnlyExtraCsv(CsvModel):
+            nom = CharField()
+            age = IntegerField()
+            taille = FloatField()
+            poids = FloatField()
+            bool = BooleanField()
+            
+            class Meta:
+                dbModel = MyModelTer
+                delimiter = ";"
+                update = {'keys': ["nom","age"], 'update': ['poids']}
+
                 
+        test_data = ["Janette;12;1.0;1.0", "Janette;12;2.0;2.0"]
+        test = TestUpdateOnlyExtraCsv.import_data(test_data, extra_fields=["True"])
+        self.assertEquals(MyModelTer.objects.count(), 1)
+        self.assertEquals(MyModelTer.objects.all()[0].taille, 1.0)
+        self.assertEquals(MyModelTer.objects.all()[0].poids, 2.0)
+        self.assertTrue(MyModelTer.objects.all()[0].bool)
+        
+        test_data2 = ["Jojo;11;1.0;1.0"]
+        test = TestUpdateOnlyExtraCsv.import_data(test_data2, extra_fields=["false"])
+        self.assertEquals(test[0].bool, False)
+        
+        test = TestUpdateOnlyExtraCsv.import_data(test_data2, extra_fields=["True"])
+        self.assertFalse(MyModelTer.objects.get(nom="Jojo").bool)    
+        
+
 
 class TestFields(TestCase):
     

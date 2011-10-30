@@ -81,7 +81,6 @@ class CsvModel(object):
                 raise ImproperlyConfigured("Multiple values returned for the update key %s. Keys provide are not unique" % filter_values)
             else:
                 self.update_object(dict_values, object, update_dict)
-            model.objects.get()
         else:
             model.objects.create(**dict_values)
 
@@ -249,17 +248,17 @@ class TabularLayout(object):
             
 class CsvImporter(object):
 
-    def __init__(self,csvModel,extra_fields=[],layout = None):
+    def __init__(self, csvModel, extra_fields=[], layout = None):
         self.csvModel = csvModel
         self.extra_fields = extra_fields
         self.dialect = None
         self.delimiter = None
         if not layout:
-            if hasattr(self.csvModel,'Meta') and hasattr(self.csvModel.Meta,'layout'):
+            if hasattr(self.csvModel, 'Meta') and hasattr(self.csvModel.Meta, 'layout'):
                 self.layout = self.csvModel.Meta.layout()
             else:
                 self.layout = LinearLayout()
-        
+
 
     def process_extra_fields(self, data, line):
         data_length = len(line)
@@ -268,11 +267,13 @@ class CsvImporter(object):
             for value in self.extra_fields:
                 if isinstance(value, str):
                     line.append(value)
-                if isinstance(value, dict):
+                elif isinstance(value, dict):
                     position = value.get('position', len(data) + extra_field_index)
                     if not 'value' in value:
                         raise CsvException("If a positional extra argument is defined, a value key should be present.")
                     line.insert(position, value['value'])
+                else:
+                    raise ImproperlyConfigured("Extra field should be a string or a list")
 
     def import_data(self,data):
         lines = []
@@ -284,11 +285,10 @@ class CsvImporter(object):
         return lines
         
         
-    def process_line(self,data,line,lines,line_number):
+    def process_line(self, data, line, lines, line_number):
         self.process_extra_fields(data, line)
         try :
-#            lines.append(self.csvModel(data=line,delimiter=self.delimiter))
-            self.layout.process_line(lines,line, self.csvModel,delimiter=self.delimiter)
+            self.layout.process_line(lines, line, self.csvModel, delimiter = self.delimiter)
         except SkipRow:
             pass
         except ForeignKeyFieldError, e:
@@ -304,7 +304,7 @@ class CsvImporter(object):
         
         
     def get_class_delimiter(self):
-        if not self.delimiter and hasattr(self.csvModel,'Meta') and hasattr(self.csvModel.Meta,'delimiter'):
+        if not self.delimiter and hasattr(self.csvModel, 'Meta') and hasattr(self.csvModel.Meta, 'delimiter'):
             self.delimiter = self.csvModel.Meta.delimiter
             
     def import_from_filename(self,filename):

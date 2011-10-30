@@ -40,5 +40,12 @@ class MyModelBis(models.Model):
     taille = models.FloatField()
     poids = models.FloatField()
 
+class MyModelTer(models.Model):
+
+    nom = models.CharField(max_length=15)
+    age = models.IntegerField()
+    taille = models.FloatField()
+    poids = models.FloatField()
+    bool = models.BooleanField()
 
     
