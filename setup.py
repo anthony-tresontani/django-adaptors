@@ -5,7 +5,7 @@ from distutils.core import setup
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
-setup(name='csvImporter',
+setup(name='django-csv-importer',
       version='0.1.3.2',
       description='Convert csv files into python object or django model',
       author='Anthony Tresontani',
