@@ -1,6 +1,8 @@
 from django.test import TestCase
 from fields import *
-from model import CsvModel, CsvDbModel, ImproperlyConfigured, CsvException, CsvDataException, TabularLayout, SkipRow
+from model import CsvModel, CsvDbModel, ImproperlyConfigured, \
+                  CsvException, CsvDataException, TabularLayout, SkipRow, \
+                  GroupedCsvModel
 from myTestModel.models import *
 
 
@@ -458,7 +460,54 @@ class TestCsvImporter(TestCase):
         self.assertEquals(test[0].bool, False)
         
         test = TestUpdateOnlyExtraCsv.import_data(test_data2, extra_fields=["True"])
-        self.assertFalse(MyModelTer.objects.get(nom="Jojo").bool)    
+        self.assertFalse(MyModelTer.objects.get(nom="Jojo").bool)
+        
+    def test_match(self):
+        
+        class TestMatchCsv(CsvModel):
+            text = CharField(match=["text_1","text_2"])
+            
+            class Meta:
+                dbModel = MyDualModel
+                delimiter = ";"
+                
+        test_data = ["my data"]
+        test = TestMatchCsv.import_data(test_data)
+        self.assertEquals(MyDualModel.objects.count(), 1)
+        
+        obj = MyDualModel.objects.all()[0]        
+        self.assertEquals(obj.text_1, "my data")
+        self.assertEquals(obj.text_2, "my data")
+
+class TestGroupCsv(TestCase):
+    
+    def test_simple_group(self):
+        
+        class TestCsv1(CsvModel):
+            first_name = CharField()
+            
+            class Meta:
+                dbModel = FirstNameModel
+            
+        class TestCsv2(CsvModel):
+            last_name = CharField()
+            
+            class Meta:
+                dbModel = LastNameModel
+        
+        class TestGroupedCsv(GroupedCsvModel):
+            csv_models = [TestCsv1, TestCsv2]
+            
+            class Meta:
+                delimiter = ";"
+                
+        test_data = ["jojo;lafrite"]
+        test = TestGroupedCsv.import_data(test_data)
+        self.assertEquals(FirstNameModel.objects.count(), 1)
+        self.assertEquals(FirstNameModel.objects.all()[0].first_name, "jojo")
+        
+        self.assertEquals(LastNameModel.objects.count(), 1)
+        self.assertEquals(LastNameModel.objects.all()[0].last_name, "lafrite")
         
 
 

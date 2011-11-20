@@ -48,4 +48,15 @@ class MyModelTer(models.Model):
     poids = models.FloatField()
     bool = models.BooleanField()
 
+class MyDualModel(models.Model): 
     
+    text_1 = models.CharField(max_length=10)
+    text_2 = models.CharField(max_length=10)   
+
+class FirstNameModel(models.Model):
+    
+    first_name = models.CharField(max_length=10)
+    
+class LastNameModel(models.Model):
+    
+    last_name = models.CharField(max_length=10)

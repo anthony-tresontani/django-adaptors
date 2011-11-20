@@ -98,6 +98,13 @@ class CsvModel(object):
         else:
             self.base_create_model( model, **values)
 
+    def set_values(self, values_dict, fields_name, values):
+        if isinstance(fields_name, list):
+            for field_name in fields_name:
+                values_dict[field_name] = values
+        else:
+            values_dict[fields_name] = values
+
     def __init__(self,data,delimiter=None):
         self.delimiter = delimiter
         self.cls = self.__class__
@@ -109,6 +116,7 @@ class CsvModel(object):
         self.multiple_creation_field = None
         composed_fields = []
         index_offset = 0
+        data_offset = 0
         for (attr_name,field),position in zip(self.attrs,range(len(self.attrs))):
             field.position = position
             if isinstance(field, ComposedKeyField):
@@ -116,21 +124,24 @@ class CsvModel(object):
                     index_offset += 1
                     continue
             if self.cls.has_class_delimiter() or delimiter:
-                value = data[position - index_offset]
+                value = data.pop(position - index_offset - data_offset)
+                data_offset += 1
             else:
-                value = data[0]
+                value = data.pop(0)
             try:
                 if isinstance(field, IgnoredField):
                     continue
                 if hasattr(field,'has_multiple') and field.has_multiple:
-                    remaining_data = data[position:]
+                    remaining_data = [value] + data[:] # value should be re-added
+                                                       # as it has been pop before
                     multiple_values = []
                     for data in remaining_data:
                         multiple_values.append(self.get_value(attr_name, field, data))
-                    values[self.field_matching_name] = multiple_values
+                    self.set_values(values, self.field_matching_name, multiple_values)
                     self.multiple_creation_field = self.field_matching_name
                 else:
-                    values[self.field_matching_name] = self.get_value(attr_name, field, value)
+                    value = self.get_value(attr_name, field, value)
+                    self.set_values(values, self.field_matching_name, value)
             except ValueError,e :
                 if silent_failure:
                     load_failed = True
@@ -178,18 +189,22 @@ class CsvModel(object):
         return cls.Meta.silent_failure
 
     @classmethod
-    def import_data(cls,data,extra_fields=[]):
-        importer =  CsvImporter(csvModel=cls,extra_fields=extra_fields)
+    def get_importer(cls, extra_fields=[]):
+        return CsvImporter(csvModel=cls,extra_fields=extra_fields)
+
+    @classmethod
+    def import_data(cls, data, extra_fields=[]):
+        importer =  cls.get_importer(extra_fields)
         return importer.import_data(data)
     
     @classmethod
-    def import_from_filename(cls,filename,extra_fields=[]):
-        importer =  CsvImporter(csvModel=cls,extra_fields=extra_fields)
+    def import_from_filename(cls, filename, extra_fields=[]):
+        importer =  cls.get_importer(extra_fields=extra_fields)
         return importer.import_from_filename(filename)
     
     @classmethod
-    def import_from_file(cls,file,extra_fields=[]):
-        importer =  CsvImporter(csvModel=cls,extra_fields=extra_fields)
+    def import_from_file(cls, file, extra_fields=[]):
+        importer =  cls.get_importer(extra_fields=extra_fields)
         return importer.import_from_file(file)
     
 
@@ -246,6 +261,27 @@ class TabularLayout(object):
                 self.column_no += 1
             self.column_no = 1
             
+class GroupedCsvModel(CsvModel):
+    
+    @classmethod
+    def get_importer(cls, extra_fields=[]):
+        return GroupedCsvImporter(csvModel=cls,extra_fields=extra_fields)
+
+    @classmethod
+    def has_csv_models(cls):
+        return hasattr(cls,"Meta") and hasattr(cls.Meta,"has_header") and cls.Meta.has_header
+    
+
+    def validate(self):
+        if len(self.attrs)!=0:
+            raise ImproperlyConfigured("You cannot define fields in a grouped csv model.")
+        if not hasattr(self.cls,"csv_models") or\
+           not isinstance(self.cls.csv_models, list) or\
+           len(self.cls.csv_models)==0:
+            raise ImproperlyConfigured("Group csv models should define a non empty csv_models list attribute.")
+
+
+        
 class CsvImporter(object):
 
     def __init__(self, csvModel, extra_fields=[], layout = None):
@@ -280,15 +316,15 @@ class CsvImporter(object):
         self.get_class_delimiter()
         line_number = 0
         for line in csv.reader(data,delimiter = self.delimiter):
-            self.process_line(data, line, lines, line_number)
+            self.process_line(data, line, lines, line_number, self.csvModel)
             line_number += 1
         return lines
         
         
-    def process_line(self, data, line, lines, line_number):
+    def process_line(self, data, line, lines, line_number, model):
         self.process_extra_fields(data, line)
         try :
-            self.layout.process_line(lines, line, self.csvModel, delimiter = self.delimiter)
+            self.layout.process_line(lines, line, model, delimiter = self.delimiter)
         except SkipRow:
             pass
         except ForeignKeyFieldError, e:
@@ -326,4 +362,10 @@ class CsvImporter(object):
     def __iter__(self):
         return self.lines.__iter__()
 
+
+class GroupedCsvImporter(CsvImporter):
+    
+    def process_line(self, data, line, lines, line_number, model):
+        for model in self.csvModel.csv_models:
+            super(GroupedCsvImporter, self).process_line(data, line , lines, line_number, model)
 

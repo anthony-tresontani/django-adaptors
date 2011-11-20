@@ -118,6 +118,7 @@ You can give, as argument, the following options:
 	
 `match`
 	define the django model name matching this field.
+	If a list is defined, all the field matching will received the 		value.
 
 `transform`
 	Apply the function before returning the result.
@@ -191,6 +192,15 @@ Importer option
 When importing data, you can add an optional argument `extra_fields` which is a string or a list.
 This allow to add a value to any line of the csv file before the loading.
 
+
+Grouped CSV
+-----------
+
+If you want to create more than object by line, you should use a group CSV model.
+This object will create the object in the same order than the csv_models attribute provided.
+
+`csv_models`
+	list of csv model, processed in the same order than the list
 
 
 Any Questions
