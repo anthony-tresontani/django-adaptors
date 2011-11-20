@@ -62,6 +62,7 @@ class CsvModel(object):
         object.save()
 
     def base_create_model(self, model, **dict_values):
+        object = None
         if self.cls.has_update_method():
             keys = None
             update_dict = self.cls.Meta.update
@@ -82,9 +83,14 @@ class CsvModel(object):
             else:
                 self.update_object(dict_values, object, update_dict)
         else:
-            model.objects.create(**dict_values)
-
-
+            object = model.objects.create(**dict_values)
+        self.object = object
+        
+    def get_object(self):
+        if self.cls.is_db_model():
+            return self.object
+        return None
+            
     def create_model_instance(self, values):
         model = self.cls.Meta.dbModel
         if self.multiple_creation_field:
@@ -105,7 +111,7 @@ class CsvModel(object):
         else:
             values_dict[fields_name] = values
 
-    def __init__(self,data,delimiter=None):
+    def __init__(self, data, delimiter=None):
         self.delimiter = delimiter
         self.cls = self.__class__
         self.attrs = self.get_fields()
@@ -240,8 +246,10 @@ class CsvDbModel(CsvModel):
             
 class LinearLayout(object):
     
-    def process_line(self, lines, line, model,delimiter):
-        lines.append(model(data=line,delimiter=delimiter))
+    def process_line(self, lines, line, model, delimiter):
+        value = model(data=line, delimiter=delimiter)
+        lines.append(value)
+        return value
         
 class TabularLayout(object):
     
@@ -250,16 +258,19 @@ class TabularLayout(object):
         self.column_no = 1
         self.headers = None
     
-    def process_line(self, lines, line, model,delimiter):
+    def process_line(self, lines, line, model, delimiter):
+        value = None
         if self.line_no == 0:
             self.headers = line
             self.line_no += 1
         else:
             for data in line[1:]:
                 inline_data = [line[0],self.headers[self.column_no],data]
-                lines.append(model(data=inline_data,delimiter=delimiter))
+                value = model(data=inline_data, delimiter=delimiter)
+                lines.append(value)
                 self.column_no += 1
             self.column_no = 1
+        return value
             
 class GroupedCsvModel(CsvModel):
     
@@ -323,8 +334,9 @@ class CsvImporter(object):
         
     def process_line(self, data, line, lines, line_number, model):
         self.process_extra_fields(data, line)
+        value = None
         try :
-            self.layout.process_line(lines, line, model, delimiter = self.delimiter)
+            value = self.layout.process_line(lines, line, model, delimiter = self.delimiter)
         except SkipRow:
             pass
         except ForeignKeyFieldError, e:
@@ -336,7 +348,7 @@ class CsvImporter(object):
                 raise CsvDataException(line_number, field_error =  e.message)
         except IndexError,e :
             raise CsvDataException(line_number, error = "Number of fields invalid")
-        
+        return value
         
         
     def get_class_delimiter(self):
@@ -366,6 +378,12 @@ class CsvImporter(object):
 class GroupedCsvImporter(CsvImporter):
     
     def process_line(self, data, line, lines, line_number, model):
+        previous_value = None
         for model in self.csvModel.csv_models:
-            super(GroupedCsvImporter, self).process_line(data, line , lines, line_number, model)
+            if isinstance(model, dict):
+                if "use" in model:
+                    line.insert(0, previous_value.get_object().id)
+                previous_value = super(GroupedCsvImporter, self).process_line(data, line , lines, line_number, model['model'])
+            else:
+                super(GroupedCsvImporter, self).process_line(data, line , lines, line_number, model)
 

@@ -149,6 +149,23 @@ class TestCsvImporter(TestCase):
         test = TestCsvDBModel.import_from_filename("test/csv2.csv")
         self.assertEquals(MyModel.objects.all().count(), 2)
 
+    def test_get_object(self):
+        class TestCsvGetObject(CsvModel):
+            nom = CharField()
+            age = IntegerField()
+            taille = FloatField()
+        
+            class Meta:
+                delimiter = ";"
+                dbModel = MyModel
+                
+        test_data = ["Janette;12;1.7"]
+        test = TestCsvGetObject.import_data(test_data)
+        obj = MyModel.objects.all()[0]
+        
+        self.assertEquals(obj, test[0].get_object())
+
+
     def test_db_unmatching_model(self):
         test = TestCsvDBUnmatchingModel.import_from_filename("test/csv1.csv")
         self.assertEquals(MyModel.objects.all().count(), 1)
@@ -478,26 +495,24 @@ class TestCsvImporter(TestCase):
         obj = MyDualModel.objects.all()[0]        
         self.assertEquals(obj.text_1, "my data")
         self.assertEquals(obj.text_2, "my data")
-
+        
+        
 class TestGroupCsv(TestCase):
     
     def test_simple_group(self):
         
         class TestCsv1(CsvModel):
             first_name = CharField()
-            
             class Meta:
                 dbModel = FirstNameModel
             
         class TestCsv2(CsvModel):
             last_name = CharField()
-            
             class Meta:
                 dbModel = LastNameModel
         
         class TestGroupedCsv(GroupedCsvModel):
             csv_models = [TestCsv1, TestCsv2]
-            
             class Meta:
                 delimiter = ";"
                 
@@ -508,7 +523,40 @@ class TestGroupCsv(TestCase):
         
         self.assertEquals(LastNameModel.objects.count(), 1)
         self.assertEquals(LastNameModel.objects.all()[0].last_name, "lafrite")
+    
         
+    def test_extra_group(self):
+        
+        class TestCsvFirstName(CsvModel):
+            first_name = CharField()
+            class Meta:
+                dbModel = FirstNameModel
+            
+        class TestCsvLastName(CsvModel):
+            foreign = ForeignKey(FirstNameModel)
+            last_name = CharField()
+            class Meta:
+                dbModel = LastNameModelWithForeign
+        
+        class TestGroupedCsv(GroupedCsvModel):
+            csv_models = [{"model":TestCsvFirstName, "name":"first"}, 
+                          {"model":TestCsvLastName, "name":"last",
+                           "use": {"name":"first",
+                                    "as":"foreign"}
+                           }
+                          ]
+            class Meta:
+                delimiter = ";"
+                
+        test_data = ["jojo;lafrite"]
+        test = TestGroupedCsv.import_data(test_data)
+        self.assertEquals(FirstNameModel.objects.count(), 1)
+        self.assertEquals(FirstNameModel.objects.all()[0].first_name, "jojo")
+        
+        self.assertEquals(LastNameModelWithForeign.objects.count(), 1)
+        self.assertEquals(LastNameModelWithForeign.objects.all()[0].last_name, "lafrite")
+
+
 
 
 class TestFields(TestCase):
