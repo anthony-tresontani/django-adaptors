@@ -127,7 +127,12 @@ class CsvModel(object):
 
     def construct_obj_from_model(self, object):
         for field_name, field in self.get_fields():
-            setattr(self,field_name, getattr(object, field_name, None))
+            setattr(self,
+                    field_name,
+                    getattr(object,
+                            # If match attribute is defined, use the match name,
+                            # else use the field name
+                            field.__dict__.get("match", field_name), None))
         return self
 
     def construct_obj_from_csv(self, data):

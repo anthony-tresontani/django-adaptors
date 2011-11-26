@@ -57,16 +57,6 @@ class TestCsvDBModel(TestCsvModel):
         dbModel = MyModel
 
 
-class TestCsvDBUnmatchingModel(CsvModel):
-    name = CharField(match='nom')
-    age = IntegerField()
-    taille = FloatField()
-
-    class Meta:
-        delimiter = ";"
-        dbModel = MyModel
-
-
 
 class TestCsvExitOnFailure(TestCsvModel):
     class Meta:
@@ -149,6 +139,7 @@ class TestCsvImporter(TestCase):
         test = TestCsvDBModel.import_from_filename("test/csv2.csv")
         self.assertEquals(MyModel.objects.all().count(), 2)
 
+
     def test_get_object(self):
         class TestCsvGetObject(CsvModel):
             nom = CharField()
@@ -162,13 +153,28 @@ class TestCsvImporter(TestCase):
         test_data = ["Janette;12;1.7"]
         test = TestCsvGetObject.import_data(test_data)
         obj = MyModel.objects.all()[0]
-        
         self.assertEquals(obj, test[0].get_object())
+        
 
 
     def test_db_unmatching_model(self):
+        class TestCsvDBUnmatchingModel(CsvModel):
+            name = CharField(match='nom')
+            age = IntegerField()
+            taille = FloatField()
+
+            class Meta:
+                delimiter = ";"
+                dbModel = MyModel
+
+
         test = TestCsvDBUnmatchingModel.import_from_filename("test/csv1.csv")
         self.assertEquals(MyModel.objects.all().count(), 1)
+
+        obj = test[0].get_object()
+        test_csv = TestCsvDBUnmatchingModel(obj)
+        self.assertEquals(test_csv.name, obj.nom)
+        self.assertEquals(test[0].export(), u"Roger;10;1.8")
 
     def test_field_unexpected_attributes(self):
         def create_unexpected_model():
