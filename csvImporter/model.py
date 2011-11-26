@@ -1,4 +1,5 @@
 import csv
+from django.db.models.base import Model
 from django.db.models.fields import Field as DjangoField
 from fields import Field, ForeignKeyFieldError, IgnoredField, ComposedKeyField
 from django.core.exceptions import ValidationError
@@ -29,6 +30,19 @@ class SkipRow(Exception): pass
             
         
 class CsvModel(object):
+
+    def __init__(self, data, delimiter=None):
+        self.cls = self.__class__
+        self.delimiter = None
+        if delimiter:
+            self.delimiter = delimiter
+        elif self.has_class_delimiter():
+            self.delimiter = self.cls.Meta.delimiter
+        if not isinstance(data, Model):
+            self.construct_obj_from_csv(data)
+        else:
+            self.construct_obj_from_model(data)
+
 
     def get_fields(self):
         all_cls_dict = {}
@@ -111,9 +125,12 @@ class CsvModel(object):
         else:
             values_dict[fields_name] = values
 
-    def __init__(self, data, delimiter=None):
-        self.delimiter = delimiter
-        self.cls = self.__class__
+    def construct_obj_from_model(self, object):
+        for field_name, field in self.get_fields():
+            setattr(self,field_name, getattr(object, field_name, None))
+        return self
+
+    def construct_obj_from_csv(self, data):
         self.attrs = self.get_fields()
         self.validate()
         values = {}
@@ -123,13 +140,13 @@ class CsvModel(object):
         composed_fields = []
         index_offset = 0
         data_offset = 0
-        for (attr_name,field),position in zip(self.attrs,range(len(self.attrs))):
+        for position, (attr_name, field) in enumerate(self.attrs):
             field.position = position
             if isinstance(field, ComposedKeyField):
-                    composed_fields.append(field)
-                    index_offset += 1
-                    continue
-            if self.cls.has_class_delimiter() or delimiter:
+                composed_fields.append(field)
+                index_offset += 1
+                continue
+            if self.cls.has_class_delimiter() or self.delimiter:
                 value = data.pop(position - index_offset - data_offset)
                 data_offset += 1
             else:
@@ -137,9 +154,9 @@ class CsvModel(object):
             try:
                 if isinstance(field, IgnoredField):
                     continue
-                if hasattr(field,'has_multiple') and field.has_multiple:
+                if hasattr(field, 'has_multiple') and field.has_multiple:
                     remaining_data = [value] + data[:] # value should be re-added
-                                                       # as it has been pop before
+                    # as it has been pop before
                     multiple_values = []
                     for data in remaining_data:
                         multiple_values.append(self.get_value(attr_name, field, data))
@@ -148,7 +165,7 @@ class CsvModel(object):
                 else:
                     value = self.get_value(attr_name, field, value)
                     self.set_values(values, self.field_matching_name, value)
-            except ValueError,e :
+            except ValueError, e:
                 if silent_failure:
                     load_failed = True
                     break
@@ -158,14 +175,21 @@ class CsvModel(object):
             for field in composed_fields:
                 keys = {}
                 for key in field.keys:
-                    keys[key]=values.pop(key)
+                    keys[key] = values.pop(key)
                 values[self.field_matching_name] = self.get_value(attr_name, field, keys)
             self.create_model_instance(values)
+
+    def export(self):
+        line=u""
+        for field_name, field in self.get_fields():
+            line += unicode(getattr(self, field_name))
+            line += self.delimiter
+        return line.rstrip(self.delimiter) # remove the extra delimiter
 
     def validate(self):
         if len(self.attrs)==0:
             raise ImproperlyConfigured("No field defined. Should have at least one field in the model.")
-        if not self.cls.has_class_delimiter() and not self.delimiter and len(self.attrs)>1:
+        if not self.cls.has_class_delimiter() and not getattr(self, "delimiter", False) and len(self.attrs)>1:
             raise ImproperlyConfigured("More than a single field and no delimiter defined. You should define a delimiter.")
         
 
@@ -196,7 +220,7 @@ class CsvModel(object):
 
     @classmethod
     def get_importer(cls, extra_fields=[]):
-        return CsvImporter(csvModel=cls,extra_fields=extra_fields)
+        return CsvImporter(csvModel=cls, extra_fields=extra_fields)
 
     @classmethod
     def import_data(cls, data, extra_fields=[]):
