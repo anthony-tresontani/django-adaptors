@@ -7,7 +7,6 @@ class FieldError(ValueError):
 
 
 class ForeignKeyFieldError(FieldError):
-
     def __init__(self, msg, model, value):
         self.model = model
         self.value = value
@@ -55,11 +54,10 @@ class Field(object):
             raise e
         except ValueError:
             raise ValueError("Value \'%s\' in columns %d does not match the expected type %s" %
-                              (value, self.position + 1, self.__class__.field_name))
+                             (value, self.position + 1, self.__class__.field_name))
 
 
 class IntegerField(Field):
-
     field_name = "Integer"
 
     def to_python(self, value):
@@ -67,25 +65,23 @@ class IntegerField(Field):
 
 
 class BooleanField(Field):
-
     field_name = "Boolean"
 
     def default_is_true_method(self, value):
         return value.lower() == "true"
 
-    def __init__(self,  *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         if 'is_true' in 'kwargs':
             self.is_true_method = kwargs.pop('is_true')
         else:
             self.is_true_method = self.default_is_true_method
-        super(BooleanField, self).__init__( *args, **kwargs)
-        
+        super(BooleanField, self).__init__(*args, **kwargs)
+
     def to_python(self, value):
         return self.is_true_method(value)
 
 
 class CharField(Field):
-
     field_name = "String"
 
     def to_python(self, value):
@@ -129,7 +125,6 @@ class ForeignKey(Field):
 
 
 class ComposedKeyField(ForeignKey):
-
     def to_python(self, value):
         try:
             return self.model.objects.get(**value)

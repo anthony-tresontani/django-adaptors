@@ -1,36 +1,52 @@
+"""
+Define the csv model base classe
+"""
+
 import csv
 from django.db.models.base import Model
-from django.db.models.fields import Field as DjangoField
 from fields import Field, ForeignKeyFieldError, IgnoredField, ComposedKeyField
-from django.core.exceptions import ValidationError
+
 
 class ImproperlyConfigured(Exception):
+    """
+    Raised if a missing config value is detected
+    """
     pass
 
+
 class CsvException(Exception):
+    """
+    Raised if a problem in the file is detected
+    """
     pass
-        
+
+
 class CsvDataException(CsvException):
-    def __init__(self, line, error=None ,field_error=None):
+    """
+    Raised if a data does not match the expectations
+    """
+    def __init__(self, line, error=None, field_error=None):
         self.line = line + 1
         self.error = error
         self.field_error = field_error
         if self.error:
-            Exception.__init__(self,u"Line %d: %s" % (self.line ,self.error))
+            Exception.__init__(self, u"Line %d: %s" % (self.line, self.error))
         elif self.field_error:
-            Exception.__init__(self,u"Line %d: %s" % (self.line ,self.field_error))
-            
+            Exception.__init__(self, u"Line %d: %s" % (self.line,
+                                                       self.field_error))
+
+
 class CsvFieldDataException(CsvDataException):
     def __init__(self, line, field_error, model, value):
         self.model = model
         self.value = value
-        CsvDataException.__init__(self,line, field_error=field_error)
-        
-class SkipRow(Exception): pass
-            
-        
-class CsvModel(object):
+        CsvDataException.__init__(self, line, field_error=field_error)
 
+
+class SkipRow(Exception): pass
+
+
+class CsvModel(object):
     def __init__(self, data, delimiter=None):
         self.cls = self.__class__
         self.delimiter = None
@@ -49,17 +65,17 @@ class CsvModel(object):
         all_cls_dict.update(self.cls.__dict__)
         for klass in self.cls.__bases__:
             all_cls_dict.update(klass.__dict__)
-        attributes = [(attr, all_cls_dict[attr] ) for attr in all_cls_dict if isinstance(all_cls_dict[attr], Field)]
-        sorted_field = sorted(attributes,key=lambda attrs: attrs[1].position)
+        attributes = [(attr, all_cls_dict[attr]) for attr in all_cls_dict
+                                                 if isinstance(all_cls_dict[attr],
+                                                                Field)]
+        sorted_field = sorted(attributes, key=lambda attrs: attrs[1].position)
         return sorted_field
 
 
     def get_value(self, attr_name, field, value):
         self.__dict__[attr_name] = field.get_prep_value(value)
         self.field_matching_name = field.__dict__.get("match", attr_name)
-#        values[field_matching_name] = field.get_prep_value(value)
         return field.get_prep_value(value)
-
 
 
     def update_object(self, dict_values, object, update_dict):
@@ -86,25 +102,27 @@ class CsvModel(object):
                 raise ImproperlyConfigured("The update dict should contains a keys value")
             filter_values = {}
             for key in keys:
-                filter_values.update({key:dict_values[key]})
+                filter_values.update({key: dict_values[key]})
             object = None
             try:
                 object = model.objects.get(**filter_values)
             except model.DoesNotExist:
                 object = model.objects.create(**dict_values)
             except model.MultipleObjectsReturned:
-                raise ImproperlyConfigured("Multiple values returned for the update key %s. Keys provide are not unique" % filter_values)
+                raise ImproperlyConfigured(
+                    "Multiple values returned for the update key %s.\
+                                        Keys provide are not unique" % filter_values)
             else:
                 self.update_object(dict_values, object, update_dict)
         else:
             object = model.objects.create(**dict_values)
         self.object = object
-        
+
     def get_object(self):
         if self.cls.is_db_model():
             return self.object
         return None
-            
+
     def create_model_instance(self, values):
         model = self.cls.Meta.dbModel
         if self.multiple_creation_field:
@@ -113,10 +131,10 @@ class CsvModel(object):
                 for value in multiple_values:
                     dict_values = values.copy()
                     dict_values[self.multiple_creation_field] = value
-                    self.base_create_model( model, **dict_values)
-                    
+                    self.base_create_model(model, **dict_values)
+
         else:
-            self.base_create_model( model, **values)
+            self.base_create_model(model, **values)
 
     def set_values(self, values_dict, fields_name, values):
         if isinstance(fields_name, list):
@@ -185,41 +203,42 @@ class CsvModel(object):
             self.create_model_instance(values)
 
     def export(self):
-        line=u""
+        line = u""
         for field_name, field in self.get_fields():
             line += unicode(getattr(self, field_name))
             line += self.delimiter
         return line.rstrip(self.delimiter) # remove the extra delimiter
 
     def validate(self):
-        if len(self.attrs)==0:
+        if len(self.attrs) == 0:
             raise ImproperlyConfigured("No field defined. Should have at least one field in the model.")
-        if not self.cls.has_class_delimiter() and not getattr(self, "delimiter", False) and len(self.attrs)>1:
-            raise ImproperlyConfigured("More than a single field and no delimiter defined. You should define a delimiter.")
-        
+        if not self.cls.has_class_delimiter() and not getattr(self, "delimiter", False) and len(self.attrs) > 1:
+            raise ImproperlyConfigured(
+                "More than a single field and no delimiter defined. You should define a delimiter.")
+
 
     @classmethod
     def is_db_model(cls):
-        return hasattr(cls,"Meta") and hasattr(cls.Meta,"dbModel") and cls.Meta.dbModel
+        return hasattr(cls, "Meta") and hasattr(cls.Meta, "dbModel") and cls.Meta.dbModel
 
     @classmethod
     def has_class_delimiter(cls):
-        return hasattr(cls,"Meta") and hasattr(cls.Meta,"delimiter")
-    
+        return hasattr(cls, "Meta") and hasattr(cls.Meta, "delimiter")
+
     @classmethod
     def has_header(cls):
-        return hasattr(cls,"Meta") and hasattr(cls.Meta,"has_header") and cls.Meta.has_header
-    
+        return hasattr(cls, "Meta") and hasattr(cls.Meta, "has_header") and cls.Meta.has_header
+
     @classmethod
     def has_update_method(cls):
-        has_update = hasattr(cls,"Meta") and hasattr(cls.Meta,"update")
+        has_update = hasattr(cls, "Meta") and hasattr(cls.Meta, "update")
         if has_update and not cls.is_db_model():
             raise ImproperlyConfigured("You should define a model when using the update option")
         return has_update
-        
+
     @classmethod
     def silent_failure(cls):
-        if not hasattr(cls,"Meta") or not hasattr(cls.Meta,"silent_failure"):
+        if not hasattr(cls, "Meta") or not hasattr(cls.Meta, "silent_failure"):
             return False
         return cls.Meta.silent_failure
 
@@ -229,29 +248,29 @@ class CsvModel(object):
 
     @classmethod
     def import_data(cls, data, extra_fields=[]):
-        importer =  cls.get_importer(extra_fields)
+        importer = cls.get_importer(extra_fields)
         return importer.import_data(data)
-    
+
     @classmethod
     def import_from_filename(cls, filename, extra_fields=[]):
-        importer =  cls.get_importer(extra_fields=extra_fields)
+        importer = cls.get_importer(extra_fields=extra_fields)
         return importer.import_from_filename(filename)
-    
+
     @classmethod
     def import_from_file(cls, file, extra_fields=[]):
-        importer =  cls.get_importer(extra_fields=extra_fields)
+        importer = cls.get_importer(extra_fields=extra_fields)
         return importer.import_from_file(file)
-    
 
 
 class CsvDbModel(CsvModel):
-        
     def validate(self):
         if not self.cls.is_db_model():
-            raise ImproperlyConfigured("dbModel attribute is missing or wrongly configured in the CsvDbModel class.")
-        
+            raise ImproperlyConfigured("dbModel attribute is missing \
+                                        or wrongly configured in the \
+                                        CsvDbModel class.")
+
     def get_fields(self):
-        cls_attrs = super(CsvDbModel,self).get_fields()
+        cls_attrs = super(CsvDbModel, self).get_fields()
         if len(cls_attrs) != 0:
             raise ImproperlyConfigured("A Db model should not have any csv field defined.")
         cls = self.__class__
@@ -259,34 +278,34 @@ class CsvDbModel(CsvModel):
         if cls.is_db_model():
             model = cls.Meta.dbModel
             for field in model._meta.fields:
-                attrs.append((field.name,field))
+                attrs.append((field.name, field))
         excluded_fields = cls.get_exclusion_fields()
         attrs_filtered = [attr for attr in attrs if attr[0] not in excluded_fields]
         return attrs_filtered
-    
+
     @classmethod
     def get_exclusion_fields(cls):
         list_exclusion = []
-        if hasattr(cls,"Meta") and hasattr(cls.Meta,"exclude"):
+        if hasattr(cls, "Meta") and hasattr(cls.Meta, "exclude"):
             list_exclusion.append(*cls.Meta.exclude)
         if 'id' not in list_exclusion:
             list_exclusion.append('id')
         return list_exclusion
-            
+
+
 class LinearLayout(object):
-    
     def process_line(self, lines, line, model, delimiter):
         value = model(data=line, delimiter=delimiter)
         lines.append(value)
         return value
-        
+
+
 class TabularLayout(object):
-    
     def __init__(self):
         self.line_no = 0
         self.column_no = 1
         self.headers = None
-    
+
     def process_line(self, lines, line, model, delimiter):
         value = None
         if self.line_no == 0:
@@ -294,37 +313,37 @@ class TabularLayout(object):
             self.line_no += 1
         else:
             for data in line[1:]:
-                inline_data = [line[0],self.headers[self.column_no],data]
+                inline_data = [line[0], self.headers[self.column_no], data]
                 value = model(data=inline_data, delimiter=delimiter)
                 lines.append(value)
                 self.column_no += 1
             self.column_no = 1
         return value
-            
+
+
 class GroupedCsvModel(CsvModel):
-    
     @classmethod
     def get_importer(cls, extra_fields=[]):
-        return GroupedCsvImporter(csvModel=cls,extra_fields=extra_fields)
+        return GroupedCsvImporter(csvModel=cls, extra_fields=extra_fields)
 
     @classmethod
     def has_csv_models(cls):
-        return hasattr(cls,"Meta") and hasattr(cls.Meta,"has_header") and cls.Meta.has_header
-    
+        return hasattr(cls, "Meta") and hasattr(cls.Meta, "has_header") and cls.Meta.has_header
+
 
     def validate(self):
-        if len(self.attrs)!=0:
-            raise ImproperlyConfigured("You cannot define fields in a grouped csv model.")
-        if not hasattr(self.cls,"csv_models") or\
+        if len(self.attrs) != 0:
+            raise ImproperlyConfigured("You cannot define fields in \
+                                        a grouped csv model.")
+        if not hasattr(self.cls, "csv_models") or\
            not isinstance(self.cls.csv_models, list) or\
-           len(self.cls.csv_models)==0:
-            raise ImproperlyConfigured("Group csv models should define a non empty csv_models list attribute.")
+           len(self.cls.csv_models) == 0:
+            raise ImproperlyConfigured("Group csv models should define a\
+                                        non empty csv_models list attribute.")
 
 
-        
 class CsvImporter(object):
-
-    def __init__(self, csvModel, extra_fields=[], layout = None):
+    def __init__(self, csvModel, extra_fields=[], layout=None):
         self.csvModel = csvModel
         self.extra_fields = extra_fields
         self.dialect = None
@@ -346,49 +365,51 @@ class CsvImporter(object):
                 elif isinstance(value, dict):
                     position = value.get('position', len(data) + extra_field_index)
                     if not 'value' in value:
-                        raise CsvException("If a positional extra argument is defined, a value key should be present.")
+                        raise CsvException("If a positional extra argument is \
+                                            defined, a value key should \
+                                            be present.")
                     line.insert(position, value['value'])
                 else:
                     raise ImproperlyConfigured("Extra field should be a string or a list")
 
-    def import_data(self,data):
+    def import_data(self, data):
         lines = []
         self.get_class_delimiter()
         line_number = 0
-        for line in csv.reader(data,delimiter = self.delimiter):
+        for line in csv.reader(data, delimiter=self.delimiter):
             self.process_line(data, line, lines, line_number, self.csvModel)
             line_number += 1
         return lines
-        
-        
+
+
     def process_line(self, data, line, lines, line_number, model):
         self.process_extra_fields(data, line)
         value = None
-        try :
-            value = self.layout.process_line(lines, line, model, delimiter = self.delimiter)
+        try:
+            value = self.layout.process_line(lines, line, model, delimiter=self.delimiter)
         except SkipRow:
             pass
         except ForeignKeyFieldError, e:
-            raise CsvFieldDataException(line_number, field_error =  e.message, model = e.model, value = e.value)
+            raise CsvFieldDataException(line_number, field_error=e.message, model=e.model, value=e.value)
         except ValueError, e:
             if line_number == 0 and self.csvModel.has_header():
                 pass
             else:
-                raise CsvDataException(line_number, field_error =  e.message)
-        except IndexError,e :
-            raise CsvDataException(line_number, error = "Number of fields invalid")
+                raise CsvDataException(line_number, field_error=e.message)
+        except IndexError, e:
+            raise CsvDataException(line_number, error="Number of fields invalid")
         return value
-        
-        
+
+
     def get_class_delimiter(self):
         if not self.delimiter and hasattr(self.csvModel, 'Meta') and hasattr(self.csvModel.Meta, 'delimiter'):
             self.delimiter = self.csvModel.Meta.delimiter
-            
-    def import_from_filename(self,filename):
+
+    def import_from_filename(self, filename):
         csv_file = open(filename)
         return self.import_from_file(csv_file)
-    
-    def import_from_file(self,csv_file):
+
+    def import_from_file(self, csv_file):
         self.get_class_delimiter()
         if not self.delimiter:
             dialect = csv.Sniffer().sniff(csv_file.read(1024))
@@ -405,14 +426,14 @@ class CsvImporter(object):
 
 
 class GroupedCsvImporter(CsvImporter):
-    
     def process_line(self, data, line, lines, line_number, model):
         previous_value = None
         for model in self.csvModel.csv_models:
             if isinstance(model, dict):
                 if "use" in model:
                     line.insert(0, previous_value.get_object().id)
-                previous_value = super(GroupedCsvImporter, self).process_line(data, line , lines, line_number, model['model'])
+                previous_value = super(GroupedCsvImporter, self).process_line(data, line, lines, line_number,
+                                                                              model['model'])
             else:
-                super(GroupedCsvImporter, self).process_line(data, line , lines, line_number, model)
+                super(GroupedCsvImporter, self).process_line(data, line, lines, line_number, model)
 
