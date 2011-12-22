@@ -118,8 +118,8 @@ INSTALLED_APPS = (
     # 'django.contrib.admin',
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
-    'csv_importer.csvImporter',
-    'csv_importer.myTestModel',
+    'adaptors.adaptor',
+    'adaptors.myTestModel',
     'django_nose',
 )
 
