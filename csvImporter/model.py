@@ -4,7 +4,7 @@ Define the csv model base classe
 
 import csv
 from django.db.models.base import Model
-from fields import Field, ForeignKeyFieldError, IgnoredField, ComposedKeyField
+from fields import Field, ForeignKeyFieldError, IgnoredField, ComposedKeyField, XMLRootField
 
 
 class ImproperlyConfigured(Exception):
@@ -46,24 +46,16 @@ class CsvFieldDataException(CsvDataException):
 class SkipRow(Exception): pass
 
 
-class CsvModel(object):
+class BaseModel(object):
     def __init__(self, data, delimiter=None):
         self.cls = self.__class__
-        self.delimiter = None
-        if delimiter:
-            self.delimiter = delimiter
-        elif self.has_class_delimiter():
-            self.delimiter = self.cls.Meta.delimiter
-        if not isinstance(data, Model):
-            self.construct_obj_from_csv(data)
-        else:
-            self.construct_obj_from_model(data)
+        self.attrs = self.get_fields()
 
-
-    def get_fields(self):
+    @classmethod
+    def get_fields(cls):
         all_cls_dict = {}
-        all_cls_dict.update(self.cls.__dict__)
-        for klass in self.cls.__bases__:
+        all_cls_dict.update(cls.__dict__)
+        for klass in cls.__bases__:
             all_cls_dict.update(klass.__dict__)
         attributes = [(attr, all_cls_dict[attr]) for attr in all_cls_dict
                                                  if isinstance(all_cls_dict[attr],
@@ -153,8 +145,81 @@ class CsvModel(object):
                             field.__dict__.get("match", field_name), None))
         return self
 
-    def construct_obj_from_csv(self, data):
-        self.attrs = self.get_fields()
+    def export(self):
+        line = u""
+        for field_name, field in self.get_fields():
+            line += unicode(getattr(self, field_name))
+            line += self.delimiter
+        return line.rstrip(self.delimiter) # remove the extra delimiter
+
+    @classmethod
+    def is_db_model(cls):
+        return hasattr(cls, "Meta") and hasattr(cls.Meta, "dbModel") and cls.Meta.dbModel
+
+    @classmethod
+    def has_class_delimiter(cls):
+        return hasattr(cls, "Meta") and hasattr(cls.Meta, "delimiter")
+
+    @classmethod
+    def has_header(cls):
+        return hasattr(cls, "Meta") and hasattr(cls.Meta, "has_header") and cls.Meta.has_header
+
+    @classmethod
+    def has_update_method(cls):
+        has_update = hasattr(cls, "Meta") and hasattr(cls.Meta, "update")
+        if has_update and not cls.is_db_model():
+            raise ImproperlyConfigured("You should define a model when using the update option")
+        return has_update
+
+    @classmethod
+    def silent_failure(cls):
+        if not hasattr(cls, "Meta") or not hasattr(cls.Meta, "silent_failure"):
+            return False
+        return cls.Meta.silent_failure
+
+    @classmethod
+    def import_data(cls, data, extra_fields=[]):
+        importer = cls.get_importer(extra_fields)
+        return importer.import_data(data)
+
+    @classmethod
+    def import_from_filename(cls, filename, extra_fields=[]):
+        importer = cls.get_importer(extra_fields=extra_fields)
+        return importer.import_from_filename(filename)
+
+    @classmethod
+    def import_from_file(cls, file, extra_fields=[]):
+        importer = cls.get_importer(extra_fields=extra_fields)
+        return importer.import_from_file(file)
+
+
+class CsvModel(BaseModel):
+
+    def __init__(self, data, delimiter=None):
+        super(CsvModel, self).__init__(data)
+        self.delimiter = None
+        if delimiter:
+            self.delimiter = delimiter
+        elif self.has_class_delimiter():
+            self.   delimiter = self.cls.Meta.delimiter
+        if not isinstance(data, Model):
+            self.construct_obj_from_data(data)
+        else:
+            self.construct_obj_from_model(data)
+
+
+    def validate(self):
+        if len(self.attrs) == 0:
+            raise ImproperlyConfigured("No field defined. Should have at least one field in the model.")
+        if not self.cls.has_class_delimiter() and not getattr(self, "delimiter", False) and len(self.attrs) > 1:
+            raise ImproperlyConfigured(
+            "More than a single field and no delimiter defined. You should define a delimiter.")
+
+    @classmethod
+    def get_importer(cls, extra_fields=[]):
+        return CsvImporter(csvModel=cls, extra_fields=extra_fields)
+
+    def construct_obj_from_data(self, data):
         self.validate()
         values = {}
         silent_failure = self.cls.silent_failure()
@@ -202,65 +267,6 @@ class CsvModel(object):
                 values[self.field_matching_name] = self.get_value(attr_name, field, keys)
             self.create_model_instance(values)
 
-    def export(self):
-        line = u""
-        for field_name, field in self.get_fields():
-            line += unicode(getattr(self, field_name))
-            line += self.delimiter
-        return line.rstrip(self.delimiter) # remove the extra delimiter
-
-    def validate(self):
-        if len(self.attrs) == 0:
-            raise ImproperlyConfigured("No field defined. Should have at least one field in the model.")
-        if not self.cls.has_class_delimiter() and not getattr(self, "delimiter", False) and len(self.attrs) > 1:
-            raise ImproperlyConfigured(
-                "More than a single field and no delimiter defined. You should define a delimiter.")
-
-
-    @classmethod
-    def is_db_model(cls):
-        return hasattr(cls, "Meta") and hasattr(cls.Meta, "dbModel") and cls.Meta.dbModel
-
-    @classmethod
-    def has_class_delimiter(cls):
-        return hasattr(cls, "Meta") and hasattr(cls.Meta, "delimiter")
-
-    @classmethod
-    def has_header(cls):
-        return hasattr(cls, "Meta") and hasattr(cls.Meta, "has_header") and cls.Meta.has_header
-
-    @classmethod
-    def has_update_method(cls):
-        has_update = hasattr(cls, "Meta") and hasattr(cls.Meta, "update")
-        if has_update and not cls.is_db_model():
-            raise ImproperlyConfigured("You should define a model when using the update option")
-        return has_update
-
-    @classmethod
-    def silent_failure(cls):
-        if not hasattr(cls, "Meta") or not hasattr(cls.Meta, "silent_failure"):
-            return False
-        return cls.Meta.silent_failure
-
-    @classmethod
-    def get_importer(cls, extra_fields=[]):
-        return CsvImporter(csvModel=cls, extra_fields=extra_fields)
-
-    @classmethod
-    def import_data(cls, data, extra_fields=[]):
-        importer = cls.get_importer(extra_fields)
-        return importer.import_data(data)
-
-    @classmethod
-    def import_from_filename(cls, filename, extra_fields=[]):
-        importer = cls.get_importer(extra_fields=extra_fields)
-        return importer.import_from_filename(filename)
-
-    @classmethod
-    def import_from_file(cls, file, extra_fields=[]):
-        importer = cls.get_importer(extra_fields=extra_fields)
-        return importer.import_from_file(file)
-
 
 class CsvDbModel(CsvModel):
     def validate(self):
@@ -291,6 +297,43 @@ class CsvDbModel(CsvModel):
         if 'id' not in list_exclusion:
             list_exclusion.append('id')
         return list_exclusion
+
+class XMLModel(BaseModel):
+
+    def __init__(self, data, element=None):
+        super(XMLModel, self).__init__(data)
+        self._base_root = element
+        self.construct_obj_from_data(data)
+
+    def validate(self):pass
+
+    @classmethod
+    def get_root_field(cls):
+        for field_name, field in cls.get_fields():
+            if isinstance(field, XMLRootField):
+                return field_name, field
+        return None
+
+    def construct_obj_from_data(self, data):
+        for field_name, field in self.attrs:
+            field.set_root(self._base_root)
+            self.__dict__[field_name] = field.get_prep_value(data)
+
+    @classmethod
+    def get_importer(cls, *args):
+        return XMLImporter(model=cls)
+
+class XMLImporter(object):
+    def __init__(self, model):
+        self.model = model
+
+    def import_data(self, data):
+        root_name, root_field = self.model.get_root_field()
+        objects = []
+        for element in root_field.get_root(data):
+            object = self.model(data, element)
+            objects.append(object)
+        return objects
 
 
 class LinearLayout(object):

@@ -2,7 +2,7 @@ from django.test import TestCase
 from fields import *
 from model import CsvModel, CsvDbModel, ImproperlyConfigured,\
     CsvException, CsvDataException, TabularLayout, SkipRow,\
-    GroupedCsvModel
+    GroupedCsvModel, XMLModel
 from myTestModel.models import *
 
 
@@ -629,4 +629,122 @@ class TestExport(TestCase):
         self.assertEquals(test.export(), u"Jojo;18;1.8")
 
         
+class TestXMLImporter(TestCase):
 
+    def test_extract_xml_data_simplest_case(self):
+        xml = "<name>jojo</name>"
+        field = XMLCharField(path="/name", root=None)
+        self.assertEquals(field.to_python(xml), "jojo")
+
+    def test_extract_xml_data_integer(self):
+        xml = "<data><name>jojo</name><length>2</length></data>"
+        char_field = XMLCharField(path="name", root=None)
+        int_field = XMLIntegerField(path="length", root=None)
+        self.assertEquals(char_field.to_python(xml), "jojo")
+        self.assertEquals(int_field.to_python(xml), 2)
+
+    def test_extract_xml_data_float(self):
+        xml = "<data><name>jojo</name><length>2.0</length></data>"
+        float_field = XMLFloatField(path="length", root=None)
+        self.assertEquals(float_field.to_python(xml), 2.0)
+
+    def test_transform(self):
+        xml = "<data><name>jojo</name><length>2.0</length></data>"
+        float_field = XMLFloatField(path="length", transform=lambda x:x + 1, root=None)
+        self.assertEquals(float_field.get_prep_value(xml), 3.0)
+
+    def test_simple_xml_model(self):
+        class TestXMLModel(XMLModel):
+            root = XMLRootField(path="person")
+            name = XMLCharField(path="name")
+            age = XMLIntegerField(path="age")
+
+        xmldata = """<data>
+                        <person>
+                            <name>Jojo</name>
+                            <age>14</age>
+                        </person>
+                        <person>
+                            <name>Gigi</name>
+                            <age>12</age>
+                        </person>
+                     </data>"""
+        test = TestXMLModel.import_data(xmldata)
+        jojo = test[0]
+        self.assertEquals(jojo.name, "Jojo")
+        self.assertEquals(jojo.age, 14)
+
+        gigi = test[1]
+        self.assertEquals(gigi.name, "Gigi")
+        self.assertEquals(gigi.age, 12)
+
+
+    def test_null_value(self):
+        class TestXMLModel(XMLModel):
+            root = XMLRootField(path="person")
+            name = XMLCharField(path="name")
+            age = XMLIntegerField(path="age", null=True)
+
+        xmldata = """<data>
+                        <person>
+                            <name>Jojo</name>
+                            <age>14</age>
+                        </person>
+                        <person>
+                            <name>Gigi</name>
+                        </person>
+                     </data>"""
+        test = TestXMLModel.import_data(xmldata)
+        jojo = test[0]
+        self.assertEquals(jojo.name, "Jojo")
+        self.assertEquals(jojo.age, 14)
+
+        gigi = test[1]
+        self.assertEquals(gigi.name, "Gigi")
+        self.assertEquals(gigi.age, None)
+
+    def test_default_value(self):
+        class TestXMLModel(XMLModel):
+            root = XMLRootField(path="person")
+            name = XMLCharField(path="name")
+            age = XMLIntegerField(path="age", null=True, default="10")
+
+        xmldata = """<data>
+                        <person>
+                            <name>Jojo</name>
+                            <age>14</age>
+                        </person>
+                        <person>
+                            <name>Gigi</name>
+                        </person>
+                     </data>"""
+        test = TestXMLModel.import_data(xmldata)
+        jojo = test[0]
+        self.assertEquals(jojo.name, "Jojo")
+        self.assertEquals(jojo.age, 14)
+
+        gigi = test[1]
+        self.assertEquals(gigi.name, "Gigi")
+        self.assertEquals(gigi.age, 10)
+
+    def test_foreign_field(self):
+        class TestXMLModel(XMLModel):
+            root = XMLRootField(path="person")
+            model = XMLForeignKey(MyModel, path="id", null=True)
+
+            class Meta:
+                dbModel = MyModelWithForeign
+
+
+        xmldata = """<data>
+                        <person>
+                            <id>1</id>
+                        </person>
+                        <person>
+                        </person>
+
+                     </data>"""
+        model_object1 = MyModel.objects.create(nom="Gigi", age=10, taille=1.2)
+        test = TestXMLModel.import_data(xmldata)
+        self.assertEquals(test[0].model, model_object1)
+        self.assertEquals(test[1].model, None)

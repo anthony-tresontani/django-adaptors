@@ -1,3 +1,5 @@
+from lxml import etree
+
 from django.db.models import Model as djangoModel
 from django.core.exceptions import ObjectDoesNotExist
 
@@ -98,10 +100,6 @@ class FloatField(Field):
 class IgnoredField(Field):
     field_name = "Ignore the value"
 
-    def to_python(self, value):
-        return None
-
-
 class ForeignKey(Field):
     field_name = "not defined"
 
@@ -130,3 +128,61 @@ class ComposedKeyField(ForeignKey):
             return self.model.objects.get(**value)
         except ObjectDoesNotExist, e:
             raise ForeignKeyFieldError("No match found for %s" % self.model.__name__, self.model.__name__, value)
+
+class XMLField(Field):
+    type_field_class = None
+
+    def __init__(self, *args, **kwargs):
+        self.path = kwargs.pop("path")
+        self.root = kwargs.pop("root", None)
+        self.null = kwargs.pop("null", False)
+        self.default = kwargs.pop("default", None)
+        if self.default and not self.null:
+            raise FieldError("You cannot provide a default without setting the field as nullable")
+        super(XMLField, self).__init__(*args, **kwargs)
+
+
+    def _get_type_field(self):
+        base_classes = self.__class__.__bases__
+        for base_class in base_classes:
+            if issubclass(base_class, Field) and not issubclass(base_class, XMLField):
+                return base_class
+
+    def to_python(self, value):
+        element = self.root or etree.fromstring(value)
+        values = element.xpath(self.path)
+        if not values and self.null:
+            if self.default:
+                parsed_value = self.default
+            else:
+                return None
+        else:
+            parsed_value = element.xpath(self.path)[0].text
+        return self._get_type_field().to_python(self, parsed_value)
+
+    def set_root(self, root):
+        self.root = root
+
+class XMLRootField(XMLField):
+    def __init__(self, *args, **kwargs):
+        super(XMLRootField, self).__init__(*args, **kwargs)
+        kwargs['root'] = self
+
+    def to_python(self, value):
+        pass
+
+    def get_root(self, value):
+        element = etree.fromstring(value)
+        return element.xpath(self.path)
+
+class XMLCharField(XMLField, CharField):
+    pass
+
+class XMLIntegerField(XMLField, IntegerField):
+    pass
+
+class XMLFloatField(XMLField, FloatField):
+    pass
+
+class XMLForeignKey(XMLField, ForeignKey):
+    pass
