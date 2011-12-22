@@ -4,6 +4,7 @@ Define the csv model base classe
 
 import csv
 from django.db.models.base import Model
+from csvImporter.fields import FieldValueMissing
 from fields import Field, ForeignKeyFieldError, IgnoredField, ComposedKeyField, XMLRootField
 
 
@@ -317,7 +318,11 @@ class XMLModel(BaseModel):
     def construct_obj_from_data(self, data):
         for field_name, field in self.attrs:
             field.set_root(self._base_root)
-            self.__dict__[field_name] = field.get_prep_value(data)
+            try:
+                self.__dict__[field_name] = field.get_prep_value(data)
+            except IndexError:
+                raise FieldValueMissing(field_name)
+
 
     @classmethod
     def get_importer(cls, *args):

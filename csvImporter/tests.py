@@ -679,6 +679,24 @@ class TestXMLImporter(TestCase):
         self.assertEquals(gigi.age, 12)
 
 
+    def test_missing_value(self):
+        class TestXMLModel(XMLModel):
+            root = XMLRootField(path="person")
+            name = XMLCharField(path="name")
+            age = XMLIntegerField(path="age")
+
+        xmldata = """<data>
+                        <person>
+                            <name>Jojo</name>
+                            <age>14</age>
+                        </person>
+                        <person>
+                            <name>Gigi</name>
+                        </person>
+                     </data>"""
+        self.assertRaises(FieldValueMissing, TestXMLModel.import_data, xmldata)
+
+
     def test_null_value(self):
         class TestXMLModel(XMLModel):
             root = XMLRootField(path="person")
