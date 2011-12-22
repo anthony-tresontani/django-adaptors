@@ -172,8 +172,21 @@ class XMLRootField(XMLField):
         pass
 
     def get_root(self, value):
-        element = etree.fromstring(value)
+        element = self.root or etree.fromstring(value)
         return element.xpath(self.path)
+
+
+class XMLEmbed(XMLRootField):
+    def __init__(self, embed_model):
+        self.embed_model = embed_model
+        self.path = self.embed_model.get_root_field()[1].path
+
+    def get_prep_value(self, value):
+        roots = self.get_root(self.root)
+        objects = []
+        for root in roots:
+            objects.append(self.embed_model(value, element=root))
+        return objects
 
 class XMLCharField(XMLField, CharField):
     pass

@@ -735,7 +735,6 @@ class TestXMLImporter(TestCase):
             class Meta:
                 dbModel = MyModelWithForeign
 
-
         xmldata = """<data>
                         <person>
                             <id>1</id>
@@ -748,3 +747,36 @@ class TestXMLImporter(TestCase):
         test = TestXMLModel.import_data(xmldata)
         self.assertEquals(test[0].model, model_object1)
         self.assertEquals(test[1].model, None)
+
+    def test_embed_fields(self):
+        class TestInfoXml(XMLModel):
+            root = XMLRootField(path="person/info")
+            age = XMLIntegerField(path="age")
+            taille = XMLFloatField(path="taille")
+
+        class TestXMLModel(XMLModel):
+            root = XMLRootField(path="list")
+            name = XMLCharField(path="person/name")
+            info = XMLEmbed(TestInfoXml)
+
+            class Meta:
+                dbModel = MyModelWithForeign
+
+        xmldata = """<data>
+                        <list>
+                            <person>
+                                <name>Jojo</name>
+                                <info>
+                                    <age>12</age>
+                                    <taille>1.2</taille>
+                                </info>
+                                <info>
+                                    <age>13</age>
+                                    <taille>1.3</taille>
+                                </info>
+                            </person>
+                        </list>
+                     </data>"""
+        test = TestXMLModel.import_data(xmldata)
+        self.assertEquals(test[0].name, "Jojo")
+        self.assertEquals(test[0].info[1].age, 13)
