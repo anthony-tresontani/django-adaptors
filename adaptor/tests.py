@@ -798,3 +798,23 @@ class TestXMLImporter(TestCase):
         test = TestXMLModel.import_data(xmldata)
         self.assertEquals(test[0].name, "Jojo")
         self.assertEquals(test[0].info[1].age, 13)
+
+
+    def test_subclass(self):
+        class TestXMLModel(XMLModel):
+            root = XMLRootField(path="person")
+            name = XMLCharField(path="name")
+
+        class TestSubXMLModel(TestXMLModel):
+            age = XMLIntegerField(path="age")
+
+        xmldata = """<data>
+                        <person>
+                            <name>Jojo</name>
+                            <age>14</age>
+                        </person>
+                     </data>"""
+        test = TestSubXMLModel.import_data(xmldata)
+        jojo = test[0]
+        self.assertEquals(jojo.name, "Jojo")
+        self.assertEquals(jojo.age, 14)
