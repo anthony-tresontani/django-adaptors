@@ -204,4 +204,15 @@ class XMLFloatField(XMLField, FloatField):
     pass
 
 class XMLForeignKey(XMLField, ForeignKey):
-    pass
+    def __init__(self, *args, **kwargs):
+        self.nomatch = kwargs.pop("nomatch", False)
+        super(XMLForeignKey, self).__init__(*args, **kwargs)
+
+    def get_prep_value(self, value):
+        try:
+            return super(XMLForeignKey, self).get_prep_value(value)
+        except ForeignKeyFieldError, e:
+            if self.nomatch:
+                return None
+            else:
+                raise e

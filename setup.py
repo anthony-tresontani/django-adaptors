@@ -13,7 +13,7 @@ setup(name='django-adaptors',
       long_description =read('README.txt'),
       license = "BSD",
       keywords = "CSV XML Django adaptor",
-      packages=['adaptors'],
+      packages=['adaptor'],
       classifiers=[
         "Development Status :: 3 - Alpha",
         "Topic :: Utilities",

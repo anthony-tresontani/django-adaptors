@@ -800,21 +800,25 @@ class TestXMLImporter(TestCase):
         self.assertEquals(test[0].info[1].age, 13)
 
 
-    def test_subclass(self):
+    def test_foreign_field(self):
+        # No exception should be raised
         class TestXMLModel(XMLModel):
             root = XMLRootField(path="person")
-            name = XMLCharField(path="name")
+            model = XMLForeignKey(MyModel, path="id", null=True, nomatch=True)
 
-        class TestSubXMLModel(TestXMLModel):
-            age = XMLIntegerField(path="age")
+            class Meta:
+                dbModel = MyModelWithForeign
 
         xmldata = """<data>
                         <person>
-                            <name>Jojo</name>
-                            <age>14</age>
+                            <id>1</id>
                         </person>
+                        <person>
+                            <id>2</id>
+                        </person>
+
                      </data>"""
-        test = TestSubXMLModel.import_data(xmldata)
-        jojo = test[0]
-        self.assertEquals(jojo.name, "Jojo")
-        self.assertEquals(jojo.age, 14)
+        model_object1 = MyModel.objects.create(nom="Gigi", age=10, taille=1.2)
+        test = TestXMLModel.import_data(xmldata)
+        self.assertEquals(test[0].model, model_object1)
+        self.assertEquals(test[1].model, None)
