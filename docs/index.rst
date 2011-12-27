@@ -86,7 +86,7 @@ If field names of your Csv model does not match the field names of your django m
 If you don't want to have to re-declare a CSV model whereas the Django model already exist, use a CsvDbModel.
 
 >>> from my_projects.models import Person
->>> from csv_importer.model import CsvDbModel
+>>> from csvImporter.model import CsvDbModel
 >>>
 >>> class MyCsvModel(CsvDbModel):
 >>>
