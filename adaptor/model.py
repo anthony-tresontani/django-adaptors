@@ -310,7 +310,7 @@ class XMLModel(BaseModel):
     @classmethod
     def get_root_field(cls):
         for field_name, field in cls.get_fields():
-            if isinstance(field, XMLRootField):
+            if type(field) == XMLRootField:
                 return field_name, field
         return None
 

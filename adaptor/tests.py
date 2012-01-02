@@ -822,3 +822,18 @@ class TestXMLImporter(TestCase):
         test = TestXMLModel.import_data(xmldata)
         self.assertEquals(test[0].model, model_object1)
         self.assertEquals(test[1].model, None)
+
+
+    def test_boolean_field(self):
+        # No exception should be raised
+        class TestXMLModel(XMLModel):
+            root = XMLRootField(path="person")
+            is_adult = XMLBooleanField(path="adult", is_true=lambda x: x=="yes")
+
+        xmldata = """<data>
+                        <person>
+                            <adult>yes</adult>
+                        </person>
+                     </data>"""
+        test = TestXMLModel.import_data(xmldata)
+        self.assertTrue(test[0].is_adult)

@@ -79,7 +79,7 @@ class BooleanField(Field):
         return value.lower() == "true"
 
     def __init__(self, *args, **kwargs):
-        if 'is_true' in 'kwargs':
+        if 'is_true' in kwargs:
             self.is_true_method = kwargs.pop('is_true')
         else:
             self.is_true_method = self.default_is_true_method
@@ -145,7 +145,9 @@ class XMLField(Field):
         self.default = kwargs.pop("default", None)
         if self.default and not self.null:
             raise FieldError("You cannot provide a default without setting the field as nullable")
-        super(XMLField, self).__init__(*args, **kwargs)
+        self.type_class = self._get_type_field()
+        if self.type_class:
+            self.type_class.__init__(self, *args, **kwargs)
 
 
     def _get_type_field(self):
@@ -185,7 +187,7 @@ class XMLRootField(XMLField):
 class XMLEmbed(XMLRootField):
     def __init__(self, embed_model):
         self.embed_model = embed_model
-        self.path = self.embed_model.get_root_field()[1].path
+        super(XMLEmbed, self).__init__(path=self.embed_model.get_root_field()[1].path)
 
     def get_prep_value(self, value):
         roots = self.get_root(self.root)
@@ -216,3 +218,6 @@ class XMLForeignKey(XMLField, ForeignKey):
                 return None
             else:
                 raise e
+
+class XMLBooleanField(XMLField, BooleanField):
+    pass
