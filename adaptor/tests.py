@@ -634,19 +634,19 @@ class TestXMLImporter(TestCase):
     def test_extract_xml_data_simplest_case(self):
         xml = "<name>jojo</name>"
         field = XMLCharField(path="/name", root=None)
-        self.assertEquals(field.to_python(xml), "jojo")
+        self.assertEquals(field.get_prep_value(xml), "jojo")
 
     def test_extract_xml_data_integer(self):
         xml = "<data><name>jojo</name><length>2</length></data>"
         char_field = XMLCharField(path="name", root=None)
         int_field = XMLIntegerField(path="length", root=None)
-        self.assertEquals(char_field.to_python(xml), "jojo")
-        self.assertEquals(int_field.to_python(xml), 2)
+        self.assertEquals(char_field.get_prep_value(xml), "jojo")
+        self.assertEquals(int_field.get_prep_value(xml), 2)
 
     def test_extract_xml_data_float(self):
         xml = "<data><name>jojo</name><length>2.0</length></data>"
         float_field = XMLFloatField(path="length", root=None)
-        self.assertEquals(float_field.to_python(xml), 2.0)
+        self.assertEquals(float_field.get_prep_value(xml), 2.0)
 
     def test_transform(self):
         xml = "<data><name>jojo</name><length>2.0</length></data>"
@@ -850,3 +850,13 @@ class TestXMLImporter(TestCase):
                      </data>"""
         test = TestXMLModel.import_data(xmldata)
         self.assertEquals(test[0].is_adult, False) # Cannot assert False as None is False
+
+    def test_prepare_xml_data_integer(self):
+        def to_int(string):
+            if string == "One":
+                return "1"
+            return string
+
+        xml = "<data><val>One</val></data>"
+        int_field = XMLIntegerField(path="val", prepare=to_int, root=None)
+        self.assertEquals(int_field.get_prep_value(xml), 1)

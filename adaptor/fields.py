@@ -60,7 +60,7 @@ class Field(object):
             return value
         except FieldError, e:
             raise e
-        except ValueError:
+        except ValueError, e:
             raise ValueError("Value \'%s\' in columns %d does not match the expected type %s" %
                              (value, self.position + 1, self.__class__.field_name))
 
@@ -156,7 +156,7 @@ class XMLField(Field):
             if issubclass(base_class, Field) and not issubclass(base_class, XMLField):
                 return base_class
 
-    def to_python(self, value):
+    def get_prep_value(self, value):
         element = self.root or etree.fromstring(value)
         values = element.xpath(self.path)
         if not values and self.null:
@@ -166,7 +166,20 @@ class XMLField(Field):
                 return None
         else:
             parsed_value = element.xpath(self.path)[0].text
-        return self._get_type_field().to_python(self, parsed_value)
+        return self.type_class.get_prep_value(self, parsed_value)
+
+
+#    def to_python(self, value):
+#        element = self.root or etree.fromstring(value)
+#        values = element.xpath(self.path)
+#        if not values and self.null:
+#            if self.default is not None:
+#                parsed_value = self.default
+#            else:
+#                return None
+#        else:
+#            parsed_value = element.xpath(self.path)[0].text
+#        return self._get_type_field().to_python(self, parsed_value)
 
     def set_root(self, root):
         self.root = root
@@ -175,6 +188,9 @@ class XMLRootField(XMLField):
     def __init__(self, *args, **kwargs):
         super(XMLRootField, self).__init__(*args, **kwargs)
         kwargs['root'] = self
+
+    def get_prep_value(self, value):
+        pass
 
     def to_python(self, value):
         pass
