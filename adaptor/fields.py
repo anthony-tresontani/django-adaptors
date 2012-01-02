@@ -160,7 +160,7 @@ class XMLField(Field):
         element = self.root or etree.fromstring(value)
         values = element.xpath(self.path)
         if not values and self.null:
-            if self.default:
+            if self.default is not None:
                 parsed_value = self.default
             else:
                 return None
