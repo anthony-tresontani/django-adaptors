@@ -860,3 +860,27 @@ class TestXMLImporter(TestCase):
         xml = "<data><val>One</val></data>"
         int_field = XMLIntegerField(path="val", prepare=to_int, root=None)
         self.assertEquals(int_field.get_prep_value(xml), 1)
+
+    def test_conditional_xpath(self):
+        class TestXMLModel(XMLModel):
+            root = XMLRootField(path="persons")
+            name = XMLCharField(path="person[age<13]/name")
+
+        xmldata = """<data>
+                        <persons>
+                            <person>
+                                <name>Jojo</name>
+                                <age>14</age>
+                            </person>
+                            <person>
+                                <name>gigi</name>
+                                <age>12</age>
+                            </person>
+                        </persons>
+                     </data>"""
+        test = TestXMLModel.import_data(xmldata)
+        gigi = test[0]
+        self.assertEquals(gigi.name, "gigi")
+
+
+
