@@ -882,5 +882,31 @@ class TestXMLImporter(TestCase):
         gigi = test[0]
         self.assertEquals(gigi.name, "gigi")
 
+    def test_multiple_calls(self):
+        class TestXMLModel(XMLModel):
+            root = XMLRootField(path="persons")
+            name = XMLCharField(path="person/name")
+
+        xmldata = """<data>
+                        <persons>
+                            <person>
+                                <name>Jojo</name>
+                                <age>14</age>
+                            </person>
+                            <person>
+                                <name>gigi</name>
+                                <age>12</age>
+                            </person>
+                        </persons>
+                     </data>"""
+        test = TestXMLModel.import_data(xmldata)
+        jojo = test[0]
+        self.assertEquals(jojo.name, "Jojo")
+
+        test = TestXMLModel.import_data(xmldata)
+        jojo = test[0]
+        self.assertEquals(jojo.name, "Jojo")
+
+
 
 

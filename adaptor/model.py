@@ -1,6 +1,7 @@
 """
 Define the csv model base classe
 """
+import copy
 
 import csv
 from django.db.models.base import Model
@@ -57,7 +58,10 @@ class BaseModel(object):
         all_cls_dict.update(cls.__dict__)
         for klass in cls.__bases__:
             all_cls_dict.update(klass.__dict__)
-        attributes = [(attr, all_cls_dict[attr]) for attr in all_cls_dict
+
+        # Add a copy the attribute to not have interference between differente instance
+        # of a same class
+        attributes = [(attr, copy.copy(all_cls_dict[attr])) for attr in all_cls_dict
                                                  if isinstance(all_cls_dict[attr],
                                                                 Field)]
         sorted_field = sorted(attributes, key=lambda attrs: attrs[1].position)
