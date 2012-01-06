@@ -3,10 +3,10 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to CSV Importer's documentation!
+Welcome to Django adaptor documentation!
 ========================================
 
-Contents: **CSV importer** is a tool which allow you to transform easily a csv file into a python object or a django model instance.
+Contents: **Django adaptor** is a tool which allow you to transform easily a CSV/XML file into a python object or a django model instance.
 It is based on a django-style declarative model.
 
 
@@ -18,12 +18,14 @@ Installation
 
 Simple, like Pypi package:
 
-easy_install csvImporter
+easy_install django-adaptors
 
 or with Pip
 
-pip install csvImporter
+pip install django-adaptors
 
+USING CSV
+=========
 
 Basic sample
 ------------
@@ -203,7 +205,49 @@ This object will create the object in the same order than the csv_models attribu
 	list of csv model, processed in the same order than the list
 
 
+USING XML
+=========
+
+The xml adaptor is using XPATH to retrieve information from the XML file.
+
+
+Fields
+------
+
+Fields are the same but are called XML<FieldName>. For example, IntegerField --> XMLIntegerField.
+
+There is 2 specifics XML field: XMLRoot and XMLEmbed.
+
+`XMLRoot`
+
+	 allow you to define the root XML element of your tree. If you want to retrieve multiple items, it should be set root element distinguish these items. 
+
+`XMLEmbed`
+	can be seen as an inner XMLEmbed element. Used to defined list of elements or just to organise your code better.
+
+Supported parameters now are: prepare, transform and is_true for XMLBooleanField.
+Some additionnal supported parameters are:
+
+`path`
+	required. The XPath expression to find the XML element.
+
+`null`
+	Is set to True, if the value is not found, do not raise an exception. Default is False.
+
+`default`
+        If null is set to True and no value is found, return this default value instead of None.
+
+Meta
+----
+
+There is no meta option supported for the moment.
+
+More samples
+============
+
+Just look at the tests.py file in the adaptor folder.
+
 Any Questions
--------------
+=============
 
 For any question, you can contact my at csv.tresontani@gmail.com

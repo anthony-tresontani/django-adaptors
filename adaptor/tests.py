@@ -777,9 +777,6 @@ class TestXMLImporter(TestCase):
             name = XMLCharField(path="person/name")
             info = XMLEmbed(TestInfoXml)
 
-            class Meta:
-                dbModel = MyModelWithForeign
-
         xmldata = """<data>
                         <list>
                             <person>
