@@ -223,18 +223,22 @@ There is 2 specifics XML field: XMLRoot and XMLEmbed.
 	 allow you to define the root XML element of your tree. If you want to retrieve multiple items, it should be set root element distinguish these items. 
 
 `XMLEmbed`
+
 	can be seen as an inner XMLEmbed element. Used to defined list of elements or just to organise your code better.
 
 Supported parameters now are: prepare, transform and is_true for XMLBooleanField.
 Some additionnal supported parameters are:
 
 `path`
+
 	required. The XPath expression to find the XML element.
 
 `null`
+
 	Is set to True, if the value is not found, do not raise an exception. Default is False.
 
 `default`
+
         If null is set to True and no value is found, return this default value instead of None.
 
 Meta
