@@ -116,30 +116,38 @@ Options :
 You can give, as argument, the following options:
 
 `row_num`
+
 	define the position in the file for this field.
 	
 `match`
+
 	define the django model name matching this field.
 	If a list is defined, all the field matching will received the 		value.
 
 `transform`
+
 	Apply the function before returning the result.
 	
 `prepare`
+
 	Apply the function on the raw value (still a string).
 
 `validator`
+
 	A class which should implement a validate function:
 	def validate(self, value):  and return a Boolean. 
 	This allow to apply some business validation on the object before uploading.
 
 `multiple`
+
     Allow a field to read as many values as the number of remaining data on the line.
     
 `keys`
+
 	A list of fields which composed the key. Only for **ComposedKeyForeign**.
 	
 `is_true`
+
 	a function which determine when a boolean is True. Only for **BooleanField**.
     
 Here is an example of a way to use the transform attribute.
@@ -151,6 +159,7 @@ Here is an example of a way to use the transform attribute.
 ForeignKey has an additional argument: 
 
 `pk` 
+
 	allow you to define on which value the object will be retrieved.
 
 You can also skip a row during ``prepare``, ``transform`` or in a ``validator`` by raising a SkipRow exception.
@@ -159,22 +168,28 @@ Meta options
 ------------
 
 `delimiter`
+
     define the delimiter of the csv file.
     If you do not set one, the sniffer will try yo find one itself.
 
 `has_header`
+
     Skip the first line if True.
 
 `dbModel`
+
     If defined, the importer will create an instance of this model.
 
 `silent_failure`
+
     If set to True, an error in a imported line will not stop the loading.
 
 `exclude`
+
     CsvDbModel only. To do take into account the django field of the django model defined in this list.
 
 `layout`
+
     Set it to LinearLayout ( by default ) or Tabular Layout. Modify the way your data are organised in.22
     the file. Tabular read:
         B1  B2  B3
@@ -183,6 +198,7 @@ Meta options
     A3  C7  C8  C9
     
 `update`
+
 	Set as a dictionnary with the 'keys' value defining the list of 'natural keys'.
 	If the value is found, update instead of creating a new object.
 	If the value is not found, create a new object.
@@ -202,6 +218,7 @@ If you want to create more than object by line, you should use a group CSV model
 This object will create the object in the same order than the csv_models attribute provided.
 
 `csv_models`
+
 	list of csv model, processed in the same order than the list
 
 
