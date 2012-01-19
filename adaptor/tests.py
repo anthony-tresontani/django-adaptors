@@ -63,6 +63,7 @@ class TestCsvExitOnFailure(TestCsvModel):
         delimiter = ";"
         dbModel = MyModel
 
+    test_only_failures = ["Roger;Error;1.8"]
     test_data = ["Roger;Error;1.8", "Janette;12;1.7"]
 
 
@@ -185,6 +186,10 @@ class TestCsvImporter(TestCase):
 
     def test_exit_on_failure(self):
         test = TestCsvExitOnFailure.import_data(TestCsvExitOnFailure.test_data)
+        self.assertEquals(len(test), 1)
+        self.assertEquals(MyModel.objects.all().count(), 1)
+
+        test = TestCsvExitOnFailure.import_data(TestCsvExitOnFailure.test_only_failures)
         self.assertEquals(MyModel.objects.all().count(), 1)
 
     def test_with_header(self):

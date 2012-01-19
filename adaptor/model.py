@@ -259,8 +259,7 @@ class CsvModel(BaseModel):
                     self.set_values(values, self.field_matching_name, value)
             except ValueError, e:
                 if silent_failure:
-                    load_failed = True
-                    break
+                   raise SkipRow()
                 else:
                     raise e
         if self.cls.is_db_model() and not load_failed:
