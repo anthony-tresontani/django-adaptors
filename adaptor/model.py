@@ -262,7 +262,7 @@ class CsvModel(BaseModel):
                    raise SkipRow()
                 else:
                     raise e
-        if self.cls.is_db_model() and not load_failed:
+        if self.cls.is_db_model():
             for field in composed_fields:
                 keys = {}
                 for key in field.keys:

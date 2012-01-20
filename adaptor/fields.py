@@ -1,7 +1,7 @@
 from lxml import etree
 
 from django.db.models import Model as djangoModel
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 
 
 class FieldError(ValueError):
@@ -126,6 +126,8 @@ class ForeignKey(Field):
             return self.model.objects.get(**{self.pk: value})
         except ObjectDoesNotExist, e:
             raise ForeignKeyFieldError("No match found for %s" % self.model.__name__, self.model.__name__, value)
+        except MultipleObjectsReturned, e:
+            raise ForeignKeyFieldError("Multiple match found for %s" % self.model.__name__, self.model.__name__, value)
 
 
 class ComposedKeyField(ForeignKey):

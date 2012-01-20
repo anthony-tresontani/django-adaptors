@@ -2,7 +2,7 @@ from django.test import TestCase
 from fields import *
 from model import CsvModel, CsvDbModel, ImproperlyConfigured,\
     CsvException, CsvDataException, TabularLayout, SkipRow,\
-    GroupedCsvModel, XMLModel
+    GroupedCsvModel, XMLModel,CsvFieldDataException
 from myTestModel.models import *
 
 
@@ -489,6 +489,16 @@ class TestCsvImporter(TestCase):
         self.assertEquals(obj.text_1, "my data")
         self.assertEquals(obj.text_2, "my data")
 
+    def test_multiple_object_returned(self):
+        class TestMatchCsv(CsvModel):
+            foreign = ForeignKey(MyModel, pk="nom")
+
+            class Meta:
+                delimiter = ";"
+
+        MyModel.objects.create(nom="name",age=12, taille=1.2)
+        MyModel.objects.create(nom="name",age=12, taille=1.2)
+        self.assertRaises(CsvFieldDataException, TestMatchCsv.import_data, ["name"])
 
 class TestGroupCsv(TestCase):
     def test_simple_group(self):
