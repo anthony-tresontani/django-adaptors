@@ -77,7 +77,7 @@ class TestCsvDBOnlyModel(CsvDbModel):
 
 
 class TestCsvDbForeignInvalid(CsvDbModel):
-    foreign = ForeignKey(MyModel)
+    foreign = DjangoModelField(MyModel)
 
     class Meta:
         dbModel = MyModelWithForeign
@@ -216,7 +216,7 @@ class TestCsvImporter(TestCase):
 
     def test_foreign_key_model(self):
         class TestCsvDbForeign(CsvModel):
-            foreign = ForeignKey(MyModel)
+            foreign = DjangoModelField(MyModel)
 
             class Meta:
                 dbModel = MyModelWithForeign
@@ -232,7 +232,7 @@ class TestCsvImporter(TestCase):
 
     def test_transform_foreign(self):
         class TestCsvDbForeignFollow(CsvModel):
-            foreign_csv = ForeignKey(MyModelWithForeign, transform=lambda x:x.foreign, match="foreign")
+            foreign_csv = DjangoModelField(MyModelWithForeign, transform=lambda x:x.foreign, match="foreign")
 
             class Meta:
                 dbModel = OtherForeign
@@ -253,7 +253,7 @@ class TestCsvImporter(TestCase):
 
     def test_error_message_foreign(self):
         class TestCsvDbForeign(CsvModel):
-            foreign = ForeignKey(MyModel)
+            foreign = DjangoModelField(MyModel)
 
             class Meta:
                 dbModel = MyModelWithForeign
@@ -491,7 +491,7 @@ class TestCsvImporter(TestCase):
 
     def test_multiple_object_returned(self):
         class TestMatchCsv(CsvModel):
-            foreign = ForeignKey(MyModel, pk="nom")
+            foreign = DjangoModelField(MyModel, pk="nom")
 
             class Meta:
                 delimiter = ";"
@@ -537,7 +537,7 @@ class TestGroupCsv(TestCase):
                 dbModel = FirstNameModel
 
         class TestCsvLastName(CsvModel):
-            foreign = ForeignKey(FirstNameModel)
+            foreign = DjangoModelField(FirstNameModel)
             last_name = CharField()
 
             class Meta:
@@ -565,19 +565,19 @@ class TestGroupCsv(TestCase):
 
 class TestFields(TestCase):
     def test_foreign_key(self):
-        self.assertRaises(ValueError, ForeignKey)
-        self.assertRaises(TypeError, ForeignKey, 10)
-        field = ForeignKey(MyModel)
+        self.assertRaises(ValueError, DjangoModelField)
+        self.assertRaises(TypeError, DjangoModelField, 10)
+        field = DjangoModelField(MyModel)
         myModel = MyModel.objects.create(nom="jojo", age="10", taille=1.5)
         self.assertEquals(field.to_python(myModel.id), myModel)
 
     def test_foreign_other_pk(self):
-        field = ForeignKey(MyModel2, pk="other_pk")
+        field = DjangoModelField(MyModel2, pk="other_pk")
         myModel2 = MyModel2.objects.create(other_pk=10)
         self.assertEquals(field.to_python(myModel2.other_pk), myModel2)
 
     def test_error_message(self):
-        field = ForeignKey(MyModel2, pk="other_pk")
+        field = DjangoModelField(MyModel2, pk="other_pk")
         myModel2 = MyModel2.objects.create(other_pk=999)
         try:
             field.to_python(666)
@@ -763,7 +763,7 @@ class TestXMLImporter(TestCase):
     def test_foreign_field(self):
         class TestXMLModel(XMLModel):
             root = XMLRootField(path="person")
-            model = XMLForeignKey(MyModel, path="id", null=True)
+            model = XMLDjangoModelField(MyModel, path="id", null=True)
 
             class Meta:
                 dbModel = MyModelWithForeign
@@ -816,7 +816,7 @@ class TestXMLImporter(TestCase):
         # No exception should be raised
         class TestXMLModel(XMLModel):
             root = XMLRootField(path="person")
-            model = XMLForeignKey(MyModel, path="id", null=True, nomatch=True)
+            model = XMLDjangoModelField(MyModel, path="id", null=True, nomatch=True)
 
             class Meta:
                 dbModel = MyModelWithForeign

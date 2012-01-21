@@ -106,7 +106,7 @@ class FloatField(Field):
 class IgnoredField(Field):
     field_name = "Ignore the value"
 
-class ForeignKey(Field):
+class DjangoModelField(Field):
     field_name = "not defined"
 
     def __init__(self, *args, **kwargs):
@@ -119,7 +119,7 @@ class ForeignKey(Field):
                 raise TypeError("The first argument should be a django model class.")
         except TypeError, e:
             raise TypeError("The first argument should be a django model class.")
-        super(ForeignKey, self).__init__(**kwargs)
+        super(DjangoModelField, self).__init__(**kwargs)
 
     def to_python(self, value):
         try:
@@ -130,7 +130,7 @@ class ForeignKey(Field):
             raise ForeignKeyFieldError("Multiple match found for %s" % self.model.__name__, self.model.__name__, value)
 
 
-class ComposedKeyField(ForeignKey):
+class ComposedKeyField(DjangoModelField):
     def to_python(self, value):
         try:
             return self.model.objects.get(**value)
@@ -223,14 +223,14 @@ class XMLIntegerField(XMLField, IntegerField):
 class XMLFloatField(XMLField, FloatField):
     pass
 
-class XMLForeignKey(XMLField, ForeignKey):
+class XMLDjangoModelField(XMLField, DjangoModelField):
     def __init__(self, *args, **kwargs):
         self.nomatch = kwargs.pop("nomatch", False)
-        super(XMLForeignKey, self).__init__(*args, **kwargs)
+        super(XMLDjangoModelField, self).__init__(*args, **kwargs)
 
     def get_prep_value(self, value):
         try:
-            return super(XMLForeignKey, self).get_prep_value(value)
+            return super(XMLDjangoModelField, self).get_prep_value(value)
         except ForeignKeyFieldError, e:
             if self.nomatch:
                 return None

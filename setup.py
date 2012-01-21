@@ -6,7 +6,7 @@ def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 setup(name='django-adaptors',
-      version='0.2.0.0',
+      version='0.2.0.1',
       description='Convert CSV/XML files into python object or django model',
       author='Anthony Tresontani',
       author_email='dev.tresontani@gmail.com',
