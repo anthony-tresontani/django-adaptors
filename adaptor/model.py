@@ -278,11 +278,11 @@ class CsvDbModel(CsvModel):
                                         or wrongly configured in the \
                                         CsvDbModel class.")
 
-    def get_fields(self):
-        cls_attrs = super(CsvDbModel, self).get_fields()
+    @classmethod
+    def get_fields(cls):
+        cls_attrs = super(CsvDbModel, cls).get_fields()
         if len(cls_attrs) != 0:
             raise ImproperlyConfigured("A Db model should not have any csv field defined.")
-        cls = self.__class__
         attrs = []
         if cls.is_db_model():
             model = cls.Meta.dbModel
@@ -345,10 +345,22 @@ class XMLImporter(object):
 
 class LinearLayout(object):
     def process_line(self, lines, line, model, delimiter):
-        value = model(data=line, delimiter=delimiter)
-        lines.append(value)
+        fields = model.get_fields()
+        multiple_index = 0
+        for index, (fieldname, field) in enumerate(fields):
+            if hasattr(field, "has_multiple") and field.has_multiple:
+               multiple_index = index 
+               break
+        if multiple_index:
+            for index, val in enumerate(line[multiple_index:]):
+                line_ = line[0:multiple_index] + [line[multiple_index + index]]
+                value = model(data=line_, delimiter=delimiter)
+                lines.append(value)
+        else:
+            # Need to keep that to preserve the side effect on line
+            value = model(data=line, delimiter=delimiter)
+            lines.append(value)
         return value
-
 
 class TabularLayout(object):
     def __init__(self):

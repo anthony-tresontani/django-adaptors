@@ -320,6 +320,7 @@ class TestCsvImporter(TestCase):
         test_data = ["josette;18;12;8"]
 
         test = CsvMultiple.import_data(test_data)
+        self.assertEquals(len(test), 3)
         self.assertEquals(MultipleModel.objects.count(), 3)
 
 
