@@ -106,6 +106,7 @@ Fields available are:
 - **IntegerField** : return an int
 - **FloatField** : return a float
 - **CharField** : return a string
+- **DateField** : return a datetime
 - **ForeignKey** : return a django model object
 - **IgnoredField** : skip the value
 - **ComposedKeyForeign** : return a django model object retrieve with multiple values as keys.
