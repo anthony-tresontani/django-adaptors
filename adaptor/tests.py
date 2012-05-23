@@ -1,3 +1,4 @@
+from datetime import datetime
 from django.test import TestCase
 from fields import *
 from model import CsvModel, CsvDbModel, ImproperlyConfigured,\
@@ -587,6 +588,10 @@ class TestFields(TestCase):
         else:
             self.assertTrue(False, "No exception raised")
         self.assertEquals(field.to_python(myModel2.other_pk), myModel2)
+
+    def test_date_field(self):
+        field = DateField(format="%d/%m/%Y")
+        self.assertEquals(field.to_python("22/05/2012"), datetime(2012,05,22))
 
 
 class TestImporter(TestCase):

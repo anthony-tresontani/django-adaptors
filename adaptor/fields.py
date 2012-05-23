@@ -1,3 +1,4 @@
+from datetime import datetime
 from lxml import etree
 
 from django.db.models import Model as djangoModel
@@ -94,6 +95,21 @@ class CharField(Field):
 
     def to_python(self, value):
         return value
+
+class DateField(Field):
+    field_name = "Date"
+
+    def __init__(self, *args, **kwargs):
+        if 'format' in kwargs:
+            self.format = kwargs.pop('format')
+        else:
+            self.format = "%d/%m/%Y"
+        super(DateField, self).__init__(*args, **kwargs)
+
+
+    def to_python(self, value):
+        return datetime.strptime(value, self.format)
+
 
 
 class FloatField(Field):
