@@ -9,13 +9,14 @@ from myTestModel.models import *
 
 class TestCsvModel(CsvModel):
     nom = CharField()
-    age = IntegerField()
+    age = IntegerField(null=True, default=5)
     taille = FloatField()
 
     class Meta:
         delimiter = ";"
 
     test_data = ["Roger", "10", "1.8"]
+    test_data_missing = ["Roger;;1.8"]
 
 
 class TestCsvError(CsvModel):
@@ -50,6 +51,7 @@ class TestCsvMultipleLine(TestCsvModel):
     taille = FloatField()
 
     test_data = ["Roger;10;1.8", "Janette;12;1.7"]
+    test_data_extra_delimiter = ["Roger;10;1.8;", "Janette;12;1.7"]
 
 
 class TestCsvDBModel(TestCsvModel):
@@ -128,6 +130,12 @@ class TestCsvImporter(TestCase):
         for line in test:
             self.assertEquals(line, test[index])
             index += 1
+
+    def test_extra_delimiter(self):
+        test = TestCsvMultipleLine.import_data(data=TestCsvMultipleLine.test_data_extra_delimiter)
+ 
+    def test_default_value(self):
+        test = TestCsvModel.import_data(data=TestCsvModel.test_data_missing)
 
     def test_real_file(self):
         file = open("test/csv1.csv")

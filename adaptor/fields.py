@@ -27,6 +27,10 @@ class Field(object):
     position = 0
 
     def __init__(self, **kwargs):
+        self.null = kwargs.pop("null", False)
+        self.default = kwargs.pop("default", None)
+        if self.default and not self.null:
+            raise FieldError("You cannot provide a default without setting the field as nullable")
         if 'row_num' in kwargs:
             self.position = kwargs.pop('row_num')
         else:
@@ -51,7 +55,11 @@ class Field(object):
         try:
             if hasattr(self, "prepare"):
                 value = self.prepare(value)
-            value = self.to_python(value)
+            if not value and self.null:
+                if self.default is not None:
+                    value = self.default
+            else:
+                value = self.to_python(value)
             if hasattr(self, "transform"):
                 value = self.transform(value)
             if hasattr(self, "validator"):
@@ -159,10 +167,6 @@ class XMLField(Field):
     def __init__(self, *args, **kwargs):
         self.path = kwargs.pop("path")
         self.root = kwargs.pop("root", None)
-        self.null = kwargs.pop("null", False)
-        self.default = kwargs.pop("default", None)
-        if self.default and not self.null:
-            raise FieldError("You cannot provide a default without setting the field as nullable")
         self.type_class = self._get_type_field()
         if self.type_class:
             self.type_class.__init__(self, *args, **kwargs)
