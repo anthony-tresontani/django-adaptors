@@ -31,6 +31,7 @@ Basic sample
 ------------
 
 Here is a basic sample:
+
 >>> from adaptor.model import CsvModel
 >>>
 >>> class MyCSvModel(CsvModel):
