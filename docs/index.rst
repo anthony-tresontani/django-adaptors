@@ -62,7 +62,7 @@ Django Model
 
 If you now want to interact with a django model, you just have to add a **dbModel** option to the class meta.
 
->>> from model import CsvModel
+>>> from adaptor.model import CsvModel
 >>>
 >>> class MyCSvModel(CsvModel):
 >>>    name = CharField()
@@ -81,7 +81,8 @@ That will automatically match to the following django model.
 >>>    length = FloatField()
 
 If field names of your Csv model does not match the field names of your django model, you can manage this with the match keyword:
-
+>>> from adaptor.model import CsvModel
+>>>
 >>> class MyCSvModel(CsvModel):
 >>>    fullname = CharField(match = "name")
 ...
@@ -89,7 +90,7 @@ If field names of your Csv model does not match the field names of your django m
 If you don't want to have to re-declare a CSV model whereas the Django model already exist, use a CsvDbModel.
 
 >>> from my_projects.models import Person
->>> from csvImporter.model import CsvDbModel
+>>> from adaptor.model import CsvDbModel
 >>>
 >>> class MyCsvModel(CsvDbModel):
 >>>
@@ -153,7 +154,8 @@ You can give, as argument, the following options:
 	a function which determine when a boolean is True. Only for **BooleanField**.
     
 Here is an example of a way to use the transform attribute.
-
+>>> from adaptor.model import CsvModel
+>>>
 >>> class MyCsvModel(CsvModel):
 >>>
 >>>     user  = ForeignKey(transform = lambda user: user.username)
