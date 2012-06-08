@@ -664,6 +664,11 @@ class TestXMLImporter(TestCase):
         xml = "<name>jojo</name>"
         field = XMLCharField(path="/name", root=None)
         self.assertEquals(field.get_prep_value(xml), "jojo")
+ 
+    def test_extract_xml_data_from_attribute(self):
+        xml = "<person name='jojo'>jojotext</person>"
+        field = XMLCharField(path="/person", attribute="name", root=None)
+        self.assertEquals(field.get_prep_value(xml), "jojo")
 
     def test_extract_xml_data_integer(self):
         xml = "<data><name>jojo</name><length>2</length></data>"

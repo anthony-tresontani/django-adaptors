@@ -1,4 +1,4 @@
-# Django settings for csv_importer project.
+# Django settings for adaptor project.
 import os
 BASE_DIR = os.path.dirname(__file__)
 
@@ -103,9 +103,9 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
 )
 
-ROOT_URLCONF = 'csv_importer.urls'
+ROOT_URLCONF = 'adaptor.urls'
 
-TEMPLATE_DIRS = ('C:/Users/trez/PycharmProjects/csv_importer/templates',)
+#TEMPLATE_DIRS = ('C:/Users/trez/PycharmProjects/csv_importer/templates',)
 
 INSTALLED_APPS = (
     'django.contrib.auth',

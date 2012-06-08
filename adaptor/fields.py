@@ -167,6 +167,7 @@ class XMLField(Field):
     def __init__(self, *args, **kwargs):
         self.path = kwargs.pop("path")
         self.root = kwargs.pop("root", None)
+        self.attribute = kwargs.pop("attribute", None)
         self.type_class = self._get_type_field()
         if self.type_class:
             self.type_class.__init__(self, *args, **kwargs)
@@ -187,7 +188,10 @@ class XMLField(Field):
             else:
                 return None
         else:
-            parsed_value = element.xpath(self.path)[0].text
+            if not self.attribute:
+                parsed_value = element.xpath(self.path)[0].text
+            else:
+                parsed_value = element.xpath(self.path)[0].get(self.attribute)
         return self.type_class.get_prep_value(self, parsed_value)
 
 

@@ -259,6 +259,10 @@ Some additionnal supported parameters are:
 
         If null is set to True and no value is found, return this default value instead of None.
 
+`attribute`
+
+       If set, will use this attribute instead of the text value of the XML element
+
 Meta
 ----
 
