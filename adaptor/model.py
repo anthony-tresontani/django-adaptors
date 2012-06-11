@@ -350,8 +350,11 @@ class LinearLayout(object):
         for index, (fieldname, field) in enumerate(fields):
             if hasattr(field, "has_multiple") and field.has_multiple:
                multiple_index = index 
+               multiple_index_fieldname = fieldname
                break
         if multiple_index:
+            if not line[multiple_index:]:
+                raise ValueError("No value found for column %s" % multiple_index_fieldname) 
             for index, val in enumerate(line[multiple_index:]):
                 line_ = line[0:multiple_index] + [line[multiple_index + index]]
                 value = model(data=line_, delimiter=delimiter)

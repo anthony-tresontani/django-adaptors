@@ -332,6 +332,20 @@ class TestCsvImporter(TestCase):
         self.assertEquals(len(test), 3)
         self.assertEquals(MultipleModel.objects.count(), 3)
 
+    def test_multiple_fields_empty(self):
+        class CsvMultiple(CsvModel):
+            nom = CharField()
+            note = IntegerField(multiple=True)
+
+            class Meta:
+                delimiter = ";"
+                dbModel = MultipleModel
+
+        test_data = ["josette"]
+
+        with self.assertRaises(CsvDataException):
+            test = CsvMultiple.import_data(test_data)
+
 
     def test_tabular_layout(self):
         class CsvTabular(CsvModel):
