@@ -67,6 +67,10 @@ class BaseModel(object):
         sorted_field = sorted(attributes, key=lambda attrs: attrs[1].position)
         return sorted_field
 
+    @classmethod
+    def get_data_fields(cls):
+       return [fieldname for (fieldname, field) in cls.get_fields() if fieldname not in getattr(cls, "_exclude_data_fields", [])]
+
 
     def get_value(self, attr_name, field, value):
         self.__dict__[attr_name] = field.get_prep_value(value)
@@ -302,6 +306,7 @@ class CsvDbModel(CsvModel):
         return list_exclusion
 
 class XMLModel(BaseModel):
+    _exclude_data_fields = ['root']
 
     def __init__(self, data, element=None):
         super(XMLModel, self).__init__(data)

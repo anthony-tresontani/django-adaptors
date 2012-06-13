@@ -952,6 +952,10 @@ class TestXMLImporter(TestCase):
         jojo = test[0]
         self.assertEquals(jojo.name, "Jojo")
 
+    def test_get_data_fields(self):
+        class TestXMLModel(XMLModel):
+            root = XMLRootField(path="persons")
+            name = XMLCharField(path="person/name")
 
-
+        self.assertEquals(TestXMLModel.get_data_fields(), ['name'])
 
