@@ -959,3 +959,25 @@ class TestXMLImporter(TestCase):
 
         self.assertEquals(TestXMLModel.get_data_fields(), ['name'])
 
+    def test_as_dict(self):
+        class TestXMLModel(XMLModel):
+            root = XMLRootField(path="persons")
+            name = XMLCharField(path="person/name")
+
+        xmldata = """<data>
+                        <persons>
+                            <person>
+                                <name>Jojo</name>
+                                <age>14</age>
+                            </person>
+                            <person>
+                                <name>gigi</name>
+                                <age>12</age>
+                            </person>
+                        </persons>
+                     </data>"""
+        test = TestXMLModel.import_data(xmldata)
+        jojo = test[0]
+        self.assertEquals(jojo.as_dict(), {"name":"Jojo"})
+
+

@@ -71,6 +71,8 @@ class BaseModel(object):
     def get_data_fields(cls):
        return [fieldname for (fieldname, field) in cls.get_fields() if fieldname not in getattr(cls, "_exclude_data_fields", [])]
 
+    def as_dict(self):
+       return dict((field, getattr(self, field)) for field in self.get_data_fields())
 
     def get_value(self, attr_name, field, value):
         self.__dict__[attr_name] = field.get_prep_value(value)
