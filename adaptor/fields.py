@@ -184,7 +184,7 @@ class XMLField(Field):
                 return base_class
 
     def get_prep_value(self, value):
-        element = self.root or etree.fromstring(value)
+        element = self.root if self.root is not None else etree.fromstring(value)
         values = element.xpath(self.path)
         if not values and self.null:
             if self.default is not None:
@@ -226,7 +226,7 @@ class XMLRootField(XMLField):
         pass
 
     def get_root(self, value):
-        element = self.root or etree.fromstring(value)
+        element = self.root if self.root is not None else etree.fromstring(value)
         return element.xpath(self.path)
 
 
