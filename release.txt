@@ -1,3 +1,8 @@
+0.2.0.10
+
+- You can use transform_<field_name> instead of transform in the field constructor
+- add the missing XMLDateField
+
 0.2.0.9
 
 - Add a choices parameters. If the value is not in, return None.

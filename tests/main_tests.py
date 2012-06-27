@@ -988,4 +988,30 @@ class TestXMLImporter(TestCase):
         self.assertEquals(choice_field.get_prep_value(xml_valid), 'Y')
         self.assertEquals(choice_field.get_prep_value(xml_invalid), None)
 
+    def test_xml_date_field(self):
+        xml_valid = "<data><date>22/05/2012</date></data>"
+        field = XMLDateField(path="date",format="%d/%m/%Y")
+        self.assertEquals(field.get_prep_value(xml_valid), datetime(2012,05,22))
+
+    def test_transform_method(self):
+         class TestXMLModel(XMLModel):
+            root = XMLRootField(path="persons")
+            name = XMLCharField(path="person/name")
+
+            def transform_name(self, name):
+                return "transformed"
+
+         xmldata = """<data>
+                        <persons>
+                            <person>
+                                <name>Jojo</name>
+                                <age>14</age>
+                            </person>
+                        </persons>
+                     </data>"""
+
+         test = TestXMLModel.import_data(xmldata)
+         jojo = test[0]
+         self.assertEquals(jojo.name, "transformed")
+
 
