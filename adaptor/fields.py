@@ -52,7 +52,7 @@ class Field(object):
         if len(kwargs) > 0:
             raise ValueError("Arguments %s unexpected" % kwargs.keys())
 
-    def get_prep_value(self, value):
+    def get_prep_value(self, value, instance=None):
         try:
             if hasattr(self, "prepare"):
                 value = self.prepare(value)
@@ -66,6 +66,9 @@ class Field(object):
                     value = None 
             if hasattr(self, "transform"):
                 value = self.transform(value)
+            else:
+                transform = getattr(instance, "transform_" + self.fieldname, lambda inst, val:val)
+                value = transform(value)
             if hasattr(self, "validator"):
                 validator = self.validator()
                 if not validator.validate(value):
@@ -183,7 +186,7 @@ class XMLField(Field):
             if issubclass(base_class, Field) and not issubclass(base_class, XMLField):
                 return base_class
 
-    def get_prep_value(self, value):
+    def get_prep_value(self, value, instance=None):
         element = self.root if self.root is not None else etree.fromstring(value)
         values = element.xpath(self.path)
         if not values and self.null:
@@ -196,20 +199,7 @@ class XMLField(Field):
                 parsed_value = element.xpath(self.path)[0].text
             else:
                 parsed_value = element.xpath(self.path)[0].get(self.attribute)
-        return self.type_class.get_prep_value(self, parsed_value)
-
-
-#    def to_python(self, value):
-#        element = self.root or etree.fromstring(value)
-#        values = element.xpath(self.path)
-#        if not values and self.null:
-#            if self.default is not None:
-#                parsed_value = self.default
-#            else:
-#                return None
-#        else:
-#            parsed_value = element.xpath(self.path)[0].text
-#        return self._get_type_field().to_python(self, parsed_value)
+        return self.type_class.get_prep_value(self, parsed_value, instance=instance)
 
     def set_root(self, root):
         self.root = root
@@ -219,7 +209,7 @@ class XMLRootField(XMLField):
         super(XMLRootField, self).__init__(*args, **kwargs)
         kwargs['root'] = self
 
-    def get_prep_value(self, value):
+    def get_prep_value(self, value, instance=None):
         pass
 
     def to_python(self, value):
@@ -235,7 +225,7 @@ class XMLEmbed(XMLRootField):
         self.embed_model = embed_model
         super(XMLEmbed, self).__init__(path=self.embed_model.get_root_field()[1].path)
 
-    def get_prep_value(self, value):
+    def get_prep_value(self, value, instance=None):
         roots = self.get_root(self.root)
         objects = []
         for root in roots:
@@ -256,9 +246,9 @@ class XMLDjangoModelField(XMLField, DjangoModelField):
         self.nomatch = kwargs.pop("nomatch", False)
         super(XMLDjangoModelField, self).__init__(*args, **kwargs)
 
-    def get_prep_value(self, value):
+    def get_prep_value(self, value, instance=None):
         try:
-            return super(XMLDjangoModelField, self).get_prep_value(value)
+            return super(XMLDjangoModelField, self).get_prep_value(value, instance=instance)
         except ForeignKeyFieldError, e:
             if self.nomatch:
                 return None

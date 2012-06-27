@@ -64,6 +64,8 @@ class BaseModel(object):
         attributes = [(attr, copy.copy(all_cls_dict[attr])) for attr in all_cls_dict
                                                  if isinstance(all_cls_dict[attr],
                                                                 Field)]
+        for fieldname, field in attributes:
+            field.fieldname = fieldname
         sorted_field = sorted(attributes, key=lambda attrs: attrs[1].position)
         return sorted_field
 
@@ -328,7 +330,7 @@ class XMLModel(BaseModel):
         for field_name, field in self.attrs:
             field.set_root(self._base_root)
             try:
-                self.__dict__[field_name] = field.get_prep_value(data)
+                self.__dict__[field_name] = field.get_prep_value(data, instance=self)
             except IndexError:
                 raise FieldValueMissing(field_name)
 
