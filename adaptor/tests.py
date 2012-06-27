@@ -980,4 +980,11 @@ class TestXMLImporter(TestCase):
         jojo = test[0]
         self.assertEquals(jojo.as_dict(), {"name":"Jojo"})
 
+    def test_choices(self):
+        xml_valid = "<data><choice>Y</choice></data>"
+        xml_invalid = "<data><choice>y</choice></data>"
+        choice_field= XMLCharField(path="choice", choices=['Y', 'N'])
+        self.assertEquals(choice_field.get_prep_value(xml_valid), 'Y')
+        self.assertEquals(choice_field.get_prep_value(xml_invalid), None)
+
 

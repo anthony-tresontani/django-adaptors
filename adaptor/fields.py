@@ -48,6 +48,7 @@ class Field(object):
             self.prepare = kwargs.pop('prepare')
         if 'keys' in kwargs and isinstance(self, ComposedKeyField):
             self.keys = kwargs.pop('keys')
+        self.choices= kwargs.pop('choices', None)
         if len(kwargs) > 0:
             raise ValueError("Arguments %s unexpected" % kwargs.keys())
 
@@ -60,6 +61,9 @@ class Field(object):
                     value = self.default
             else:
                 value = self.to_python(value)
+            if self.choices:
+                if value not in self.choices:
+                    value = None 
             if hasattr(self, "transform"):
                 value = self.transform(value)
             if hasattr(self, "validator"):
