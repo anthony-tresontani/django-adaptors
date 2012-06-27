@@ -17,3 +17,5 @@ def test_performance():
        MyCSvModel.import_data(data=data)
     after = datetime.now()
     print after - before
+
+#test_performance()
