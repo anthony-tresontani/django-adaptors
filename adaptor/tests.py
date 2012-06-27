@@ -987,4 +987,9 @@ class TestXMLImporter(TestCase):
         self.assertEquals(choice_field.get_prep_value(xml_valid), 'Y')
         self.assertEquals(choice_field.get_prep_value(xml_invalid), None)
 
+    def test_xml_date_field(self):
+        xml_valid = "<data><date>22/05/2012</date></data>"
+        field = XMLDateField(path="date",format="%d/%m/%Y")
+        self.assertEquals(field.get_prep_value(xml_valid), datetime(2012,05,22))
+
 

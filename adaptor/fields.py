@@ -267,3 +267,6 @@ class XMLDjangoModelField(XMLField, DjangoModelField):
 
 class XMLBooleanField(XMLField, BooleanField):
     pass
+
+class XMLDateField(XMLField, DateField):
+    pass
