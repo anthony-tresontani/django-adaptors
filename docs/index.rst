@@ -130,6 +130,10 @@ You can give, as argument, the following options:
 `transform`
 
 	Apply the function before returning the result.
+	You can also define a function called transform_<attribute_name>.
+
+	def transform_username(self, username):
+	    return username.capitalize()
 	
 `prepare`
 
