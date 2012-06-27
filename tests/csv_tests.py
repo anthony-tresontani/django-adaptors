@@ -3,7 +3,7 @@ from django.test import TestCase
 from adaptor.fields import *
 from adaptor.model import CsvModel, CsvDbModel, ImproperlyConfigured,\
     CsvException, CsvDataException, TabularLayout, SkipRow,\
-    GroupedCsvModel, XMLModel,CsvFieldDataException
+    GroupedCsvModel, CsvFieldDataException
 from tests.test_app.models import *
 
 
@@ -671,7 +671,3 @@ class TestExport(TestCase):
         self.assertEquals(test.taille, my_obj.taille)
 
         self.assertEquals(test.export(), u"Jojo;18;1.8")
-
-        
-
-

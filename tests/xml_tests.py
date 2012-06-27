@@ -146,6 +146,21 @@ class TestXMLImporter(TestCase):
         self.assertEquals(test[0].model, model_object1)
         self.assertEquals(test[1].model, None)
 
+    def test_element_values_can_be_transformed(self):
+        class TestXMLDoc(XMLModel):
+            root = XMLRootField(path="/person")
+            name = XMLCharField(path="/person/name")
+
+            def transform_name(self, value):
+                return value.upper()
+
+        xml = """<?xml version="1.0" encoding="UTF-8" ?>
+                 <person>
+                     <name>barry</name>
+                 </person>"""
+        doc = TestXMLDoc.import_data(xml)[0]
+        self.assertEqual('BARRY', doc.as_dict()['name'])
+
     def test_embed_fields(self):
         class TestInfoXml(XMLModel):
             root = XMLRootField(path="person/info")
@@ -318,3 +333,24 @@ class TestXMLImporter(TestCase):
         choice_field= XMLCharField(path="choice", choices=['Y', 'N'])
         self.assertEquals(choice_field.get_prep_value(xml_valid), 'Y')
         self.assertEquals(choice_field.get_prep_value(xml_invalid), None)
+
+    def test_transform_method(self):
+         class TestXMLModel(XMLModel):
+            root = XMLRootField(path="persons")
+            name = XMLCharField(path="person/name")
+
+            def transform_name(self, name):
+                return "transformed"
+
+         xmldata = """<data>
+                        <persons>
+                            <person>
+                                <name>Jojo</name>
+                                <age>14</age>
+                            </person>
+                        </persons>
+                     </data>"""
+
+         test = TestXMLModel.import_data(xmldata)
+         jojo = test[0]
+         self.assertEquals(jojo.name, "transformed")
