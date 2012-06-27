@@ -10,12 +10,10 @@ class MyCSvModel(CsvModel):
     class Meta:
         delimiter = ";"
 
-def test_performance():
+def test_performance(row=100000, cycle=10):
     before = datetime.now()
-    data = ['jojo; 12; 1.8']*100000
-    for i in range(10):   
+    data = ['jojo; 12; 1.8']*row
+    for i in range(cycle):   
        MyCSvModel.import_data(data=data)
     after = datetime.now()
     print after - before
-
-#test_performance()
