@@ -1,0 +1,5 @@
+0.2.0.9
+
+- Add a choices parameters. If the value is not in, return None.
+- Add a make file to ease common operation
+- provide a requirements.txt to easy re-gerenate the virtualenv
