@@ -66,6 +66,7 @@ class BaseModel(object):
                                                                 Field)]
         for fieldname, field in attributes:
             field.fieldname = fieldname
+
         sorted_field = sorted(attributes, key=lambda attrs: attrs[1].position)
         return sorted_field
 

@@ -1,10 +1,10 @@
 from datetime import datetime
 from django.test import TestCase
-from fields import *
-from model import CsvModel, CsvDbModel, ImproperlyConfigured,\
+from adaptor.fields import *
+from adaptor.model import CsvModel, CsvDbModel, ImproperlyConfigured,\
     CsvException, CsvDataException, TabularLayout, SkipRow,\
     GroupedCsvModel, XMLModel,CsvFieldDataException
-from myTestModel.models import *
+from tests.test_app.models import *
 
 
 class TestCsvModel(CsvModel):
@@ -138,7 +138,7 @@ class TestCsvImporter(TestCase):
         test = TestCsvModel.import_data(data=TestCsvModel.test_data_missing)
 
     def test_real_file(self):
-        file = open("test/csv1.csv")
+        file = open("tests/fixtures/csv1.csv")
         test = TestCsvModel.import_from_file(file)
         line1 = test[0]
         self.assertEquals(line1.nom, 'Roger')
@@ -146,7 +146,7 @@ class TestCsvImporter(TestCase):
         self.assertEquals(line1.taille, 1.8)
 
     def test_db_model(self):
-        test = TestCsvDBModel.import_from_filename("test/csv2.csv")
+        test = TestCsvDBModel.import_from_filename("tests/fixtures/csv2.csv")
         self.assertEquals(MyModel.objects.all().count(), 2)
 
 
@@ -177,7 +177,7 @@ class TestCsvImporter(TestCase):
                 dbModel = MyModel
 
 
-        test = TestCsvDBUnmatchingModel.import_from_filename("test/csv1.csv")
+        test = TestCsvDBUnmatchingModel.import_from_filename("tests/fixtures/csv1.csv")
         self.assertEquals(MyModel.objects.all().count(), 1)
 
         obj = test[0].get_object()
@@ -257,7 +257,7 @@ class TestCsvImporter(TestCase):
             class Meta:
                 dbModel = MyModel
 
-        test = TestCsvWithHeader.import_from_filename("test/csv3.csv")
+        test = TestCsvWithHeader.import_from_filename("tests/fixtures/csv3.csv")
         self.assertEquals(MyModel.objects.all().count(), 23)
 
     def test_error_message_foreign(self):
@@ -523,6 +523,7 @@ class TestCsvImporter(TestCase):
         MyModel.objects.create(nom="name",age=12, taille=1.2)
         MyModel.objects.create(nom="name",age=12, taille=1.2)
         self.assertRaises(CsvFieldDataException, TestMatchCsv.import_data, ["name"])
+
 
 class TestGroupCsv(TestCase):
     def test_simple_group(self):

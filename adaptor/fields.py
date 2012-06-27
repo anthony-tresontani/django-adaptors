@@ -67,8 +67,9 @@ class Field(object):
             if hasattr(self, "transform"):
                 value = self.transform(value)
             else:
-                transform = getattr(instance, "transform_" + self.fieldname, lambda inst, val:val)
-                value = transform(value)
+                if hasattr(self, "fieldname") and instance:
+                    transform = getattr(instance, "transform_" + self.fieldname, lambda val: val)
+                    value = transform(value)
             if hasattr(self, "validator"):
                 validator = self.validator()
                 if not validator.validate(value):

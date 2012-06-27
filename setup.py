@@ -10,13 +10,17 @@ setup(name='django-adaptors',
       description='Convert CSV/XML files into python object or django model',
       author='Anthony Tresontani',
       author_email='dev.tresontani@gmail.com',
-      long_description =read('README.txt'),
-      license = "BSD",
-      keywords = "CSV XML Django adaptor",
+      long_description=read('README.txt'),
+      license="BSD",
+      keywords="CSV XML Django adaptor",
       packages=['adaptor'],
+      install_requires=[
+          'lxml==2.3.4',
+          'Django==1.4',
+      ],
       classifiers=[
         "Development Status :: 3 - Alpha",
         "Topic :: Utilities",
         "License :: OSI Approved :: BSD License",
     ],
-     )
+)
