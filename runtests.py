@@ -12,21 +12,23 @@ if not settings.configured:
                 }
             },
             INSTALLED_APPS=[
-                'myTestModel',
+                'tests.test_app',
             ],
         )
 
 from django_nose import NoseTestSuiteRunner
 
 
-def run_tests(*test_args):
+def run_tests(nose_options, test_args):
     if not test_args:
-        test_args = ['adaptor']
-    test_runner = NoseTestSuiteRunner(verbosity=1)
+        test_args = ['tests']
+    test_runner = NoseTestSuiteRunner(verbosity=nose_options.verbosity)
     failures = test_runner.run_tests(test_args)
     sys.exit(failures)
 
 if __name__ == '__main__':
     parser = OptionParser()
+    parser.add_option('-v', '--verbose', dest='verbosity', default=1, type=int)
     (options, args) = parser.parse_args()
-    run_tests(*args)
+    
+    run_tests(options, args)
