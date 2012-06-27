@@ -3,12 +3,11 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to Django adaptor documentation!
-========================================
+django-adaptors
+===============
 
-Contents: **Django adaptor** is a tool which allow you to transform easily a CSV/XML file into a python object or a django model instance.
-It is based on a django-style declarative model.
-
+**Django adaptor** is a tool which allow you to transform easily a CSV/XML file into a python object or a django model instance.
+It is based on the django-style declarative model.
 
 .. toctree::
    :maxdepth: 2
@@ -16,34 +15,34 @@ It is based on a django-style declarative model.
 Installation
 ------------
 
-Simple, like Pypi package:
+Use either ``easy_install``::
 
-easy_install django-adaptors
+    easy_install django-adaptors
 
-or with Pip
+or ``pip``::
 
-pip install django-adaptors
+    pip install django-adaptors
 
-USING CSV
-=========
+CSV data
+========
 
-Basic sample
-------------
+Basic example
+-------------
 
-Here is a basic sample:
+Consider the following:
 
 >>> from adaptor.model import CsvModel
->>>
 >>> class MyCSvModel(CsvModel):
->>>    name = CharField()
->>>    age = IntegerField()
->>>    length = FloatField()
->>> 
->>>    class Meta:
->>>        delimiter = ";"
+...     name = CharField()
+...     age = IntegerField()
+...     length = FloatField()
+...  
+...     class Meta:
+...         delimiter = ";"
 
-You declare a MyCsvModel which will match to a csv file like this:
-"Anthony;27;1.75"
+You declare a ``MyCsvModel`` which will match to a CSV file like this:
+
+    Anthony;27;1.75
 
 To import the file or any iterable object, just do:
 
@@ -52,11 +51,12 @@ To import the file or any iterable object, just do:
 >>> first_line.age
 27
 
-Without an explicit declaration, data and columns are matched in the same order:
+Without an explicit declaration, data and columns are matched in the same
+order::
 
-- Anthony --> Column 0 --> Field 0 --> name
-- 27      --> Column 1 --> Field 1 --> age
-- 1.75    --> Column 2 --> Field 2 --> length
+    Anthony --> Column 0 --> Field 0 --> name
+    27      --> Column 1 --> Field 1 --> age
+    1.75    --> Column 2 --> Field 2 --> length
 
 Django Model
 ------------
@@ -64,28 +64,27 @@ Django Model
 If you now want to interact with a django model, you just have to add a **dbModel** option to the class meta.
 
 >>> from adaptor.model import CsvModel
->>>
 >>> class MyCSvModel(CsvModel):
->>>    name = CharField()
->>>    age = IntegerField()
->>>    length = FloatField()
->>>
->>>    class Meta:
->>>        delimiter = ";"
->>>        dbModel = Person
+...     name = CharField()
+...     age = IntegerField()
+...     length = FloatField()
+...
+...     class Meta:
+...         delimiter = ";"
+...         dbModel = Person
 
 That will automatically match to the following django model.
 
 >>> class Person(models.Model):
->>>    name = CharField(max_length = 100)
->>>    age = IntegerField()
->>>    length = FloatField()
+...     name = CharField(max_length = 100)
+...     age = IntegerField()
+...     length = FloatField()
 
 If field names of your Csv model does not match the field names of your django model, you can manage this with the match keyword:
+
 >>> from adaptor.model import CsvModel
->>>
 >>> class MyCSvModel(CsvModel):
->>>    fullname = CharField(match = "name")
+...     fullname = CharField(match = "name")
 ...
 
 If you don't want to have to re-declare a CSV model whereas the Django model already exist, use a CsvDbModel.
@@ -94,10 +93,10 @@ If you don't want to have to re-declare a CSV model whereas the Django model alr
 >>> from adaptor.model import CsvDbModel
 >>>
 >>> class MyCsvModel(CsvDbModel):
->>>
->>>     class Meta:
->>>        dbModel = Person
->>>        delimiter = ";"
+...
+...     class Meta:
+...        dbModel = Person
+...        delimiter = ";"
 
 *The django model should be imported in the model*
 
@@ -276,6 +275,19 @@ More samples
 ============
 
 Just look at the tests.py file in the adaptor folder.
+
+Contributing
+============
+
+Clone the repo to your local workspace then run::
+
+    mkvirtualenv adaptors
+    python setup.py develop
+    pip install -r requirements.txt
+
+and you should be able to see the tests pass by running::
+
+    make test
 
 Any Questions
 =============
