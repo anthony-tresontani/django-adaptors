@@ -3,27 +3,7 @@ from lxml import etree
 
 from django.db.models import Model as djangoModel
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
-
-
-class FieldError(ValueError):
-    pass
-
-
-class ForeignKeyFieldError(FieldError):
-    def __init__(self, msg, model, value):
-        self.model = model
-        self.value = value
-        self.msg = msg
-        super(ForeignKeyFieldError, self).__init__(self.msg)
-
-
-class FieldValueMissing(FieldError):
-    def __init__(self, field_name):
-        super(FieldValueMissing, self).__init__("No value found for field %s" % field_name)
-
-
-class ChoiceError(ValueError):
-    pass
+from adaptor import exceptions
 
 
 class AllChoices(object):
@@ -43,7 +23,7 @@ class Field(object):
         self.null = kwargs.pop("null", False)
         self.default = kwargs.pop("default", None)
         if self.default and not self.null:
-            raise FieldError("You cannot provide a default without setting the field as nullable")
+            raise exceptions.FieldError("You cannot provide a default without setting the field as nullable")
         if 'row_num' in kwargs:
             self.position = kwargs.pop('row_num')
         else:
@@ -71,20 +51,20 @@ class Field(object):
                 value = self.to_python(value)
             if value not in self.choices:
                 if not self.null:
-                    raise ChoiceError("Value \'%s\' does not belong to %s" % (value, self.choices))
+                    raise exceptions.ChoiceError("Value \'%s\' does not belong to %s" % (value, self.choices))
                 value = None 
             transform_method = "transform_" + getattr(self, "fieldname", self.field_name)
             # Look for transform_<field_name>, else look for the transform parameter, else identity method
             transform = getattr(instance, transform_method, self.transform)
             value = transform(value)
             if not self.validator().validate(value):
-                raise FieldError(self.validator.validation_message)
+                raise exceptions.FieldError(self.validator.validation_message)
             return value
-        except ChoiceError, e:
+        except exceptions.ChoiceError:
             raise 
-        except FieldError, e:
+        except exceptions.FieldError:
             raise
-        except ValueError, e:
+        except ValueError:
             raise ValueError("Value \'%s\' in columns %d does not match the expected type %s" %
                              (value, self.position + 1, self.__class__.field_name))
 
@@ -157,25 +137,25 @@ class DjangoModelField(Field):
         try:
             if not issubclass(self.model, djangoModel):
                 raise TypeError("The first argument should be a django model class.")
-        except TypeError, e:
+        except TypeError:
             raise TypeError("The first argument should be a django model class.")
         super(DjangoModelField, self).__init__(**kwargs)
 
     def to_python(self, value):
         try:
             return self.model.objects.get(**{self.pk: value})
-        except ObjectDoesNotExist, e:
-            raise ForeignKeyFieldError("No match found for %s" % self.model.__name__, self.model.__name__, value)
-        except MultipleObjectsReturned, e:
-            raise ForeignKeyFieldError("Multiple match found for %s" % self.model.__name__, self.model.__name__, value)
+        except ObjectDoesNotExist:
+            raise exceptions.ForeignKeyFieldError("No match found for %s" % self.model.__name__, self.model.__name__, value)
+        except MultipleObjectsReturned:
+            raise exceptions.ForeignKeyFieldError("Multiple match found for %s" % self.model.__name__, self.model.__name__, value)
 
 
 class ComposedKeyField(DjangoModelField):
     def to_python(self, value):
         try:
             return self.model.objects.get(**value)
-        except ObjectDoesNotExist, e:
-            raise ForeignKeyFieldError("No match found for %s" % self.model.__name__, self.model.__name__, value)
+        except ObjectDoesNotExist:
+            raise exceptions.ForeignKeyFieldError("No match found for %s" % self.model.__name__, self.model.__name__, value)
 
 
 class XMLField(Field):
@@ -264,7 +244,7 @@ class XMLDjangoModelField(XMLField, DjangoModelField):
     def get_prep_value(self, value, instance=None):
         try:
             return super(XMLDjangoModelField, self).get_prep_value(value, instance=instance)
-        except ForeignKeyFieldError, e:
+        except exceptions.ForeignKeyFieldError, e:
             if self.nomatch:
                 return None
             else:
