@@ -21,15 +21,20 @@ class FieldValueMissing(FieldError):
     def __init__(self, field_name):
         super(FieldValueMissing, self).__init__("No value found for field %s" % field_name)
 
-class ChoiceError(ValueError):pass
+
+class ChoiceError(ValueError):
+    pass
+
 
 class AllChoices(object):
     def __contains__(self, value):
         return True
 
+
 class AlwaysValidValidator(object):
     def validate(self, val):
         return True
+
 
 class Field(object):
     position = 0
@@ -114,6 +119,7 @@ class CharField(Field):
     def to_python(self, value):
         return value
 
+
 class DateField(Field):
     field_name = "Date"
 
@@ -129,7 +135,6 @@ class DateField(Field):
         return datetime.strptime(value, self.format)
 
 
-
 class FloatField(Field):
     field_name = "A float number"
 
@@ -139,6 +144,7 @@ class FloatField(Field):
 
 class IgnoredField(Field):
     field_name = "Ignore the value"
+
 
 class DjangoModelField(Field):
     field_name = "not defined"
@@ -170,6 +176,7 @@ class ComposedKeyField(DjangoModelField):
             return self.model.objects.get(**value)
         except ObjectDoesNotExist, e:
             raise ForeignKeyFieldError("No match found for %s" % self.model.__name__, self.model.__name__, value)
+
 
 class XMLField(Field):
     type_field_class = None
@@ -207,6 +214,7 @@ class XMLField(Field):
     def set_root(self, root):
         self.root = root
 
+
 class XMLRootField(XMLField):
     def __init__(self, *args, **kwargs):
         super(XMLRootField, self).__init__(*args, **kwargs)
@@ -235,14 +243,18 @@ class XMLEmbed(XMLRootField):
             objects.append(self.embed_model(value, element=root))
         return objects
 
+
 class XMLCharField(XMLField, CharField):
     pass
+
 
 class XMLIntegerField(XMLField, IntegerField):
     pass
 
+
 class XMLFloatField(XMLField, FloatField):
     pass
+
 
 class XMLDjangoModelField(XMLField, DjangoModelField):
     def __init__(self, *args, **kwargs):
@@ -258,8 +270,10 @@ class XMLDjangoModelField(XMLField, DjangoModelField):
             else:
                 raise e
 
+
 class XMLBooleanField(XMLField, BooleanField):
     pass
+
 
 class XMLDateField(XMLField, DateField):
     pass
