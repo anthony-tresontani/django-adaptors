@@ -238,8 +238,7 @@ class TestXMLImporter(TestCase):
             is_adult = XMLBooleanField(path="adult", is_true=lambda x: x=="yes", null=True, default=False)
 
         xmldata = """<data>
-                        <person>
-                        </person>
+                        <person> </person>
                      </data>"""
         test = TestXMLModel.import_data(xmldata)
         self.assertEquals(test[0].is_adult, False) # Cannot assert False as None is False
@@ -356,3 +355,22 @@ class TestXMLImporter(TestCase):
          test = TestXMLModel.import_data(xmldata)
          jojo = test[0]
          self.assertEquals(jojo.name, "transformed")
+
+    def test_errors(self):
+        class TestXMLModel(XMLModel):
+            root = XMLRootField(path=".")
+            value = XMLIntegerField(path="value")
+
+        xmldata_valid = """<person>
+                            <value>12</value>
+                      </person>
+                  """
+        test = TestXMLModel.import_data(xmldata_valid)
+        self.assertEquals(len(test[0].errors), 0)
+
+        xmldata_invalid = """<person>
+                            <value>twelve</value>
+                      </person>
+                  """
+        test = TestXMLModel.import_data(xmldata_valid)
+        self.assertEquals(len(test[0].errors), 1)
