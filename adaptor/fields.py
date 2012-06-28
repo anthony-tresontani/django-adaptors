@@ -16,10 +16,15 @@ class AlwaysValidValidator(object):
         return True
 
 
-class Field(object):
+class BaseField(object):
+    def __init__(self, kwargs):
+        self.transform = kwargs.pop('transform', lambda val:val)
+
+class Field(BaseField):
     position = 0
 
     def __init__(self, **kwargs):
+        super(Field, self).__init__(kwargs)
         self.null = kwargs.pop("null", False)
         self.default = kwargs.pop("default", None)
         if self.default and not self.null:
@@ -31,7 +36,6 @@ class Field(object):
             Field.position += 1
         if 'match' in kwargs:
             self.match = kwargs.pop('match')
-        self.transform = kwargs.pop('transform', lambda val:val)
         self.validator = kwargs.pop('validator', AlwaysValidValidator)
         if 'multiple' in kwargs:
             self.has_multiple = kwargs.pop('multiple')
@@ -41,6 +45,12 @@ class Field(object):
         self.choices= kwargs.pop('choices', AllChoices())
         if len(kwargs) > 0:
             raise ValueError("Arguments %s unexpected" % kwargs.keys())
+
+    def get_transform_method(self, instance):
+        """ Look for transform_<field_name>, else look for the transform parameter, else identity method """
+        transform_method = "transform_" + getattr(self, "fieldname", self.field_name)
+        transform = getattr(instance, transform_method, self.transform)
+        return transform
 
     def get_prep_value(self, value, instance=None):
         try:
@@ -53,9 +63,7 @@ class Field(object):
                 if not self.null:
                     raise exceptions.ChoiceError("Value \'%s\' does not belong to %s" % (value, self.choices))
                 value = None 
-            transform_method = "transform_" + getattr(self, "fieldname", self.field_name)
-            # Look for transform_<field_name>, else look for the transform parameter, else identity method
-            transform = getattr(instance, transform_method, self.transform)
+            transform = self.get_transform_method(instance)
             value = transform(value)
             if not self.validator().validate(value):
                 raise exceptions.FieldError(self.validator.validation_message)
@@ -168,6 +176,8 @@ class XMLField(Field):
         self.type_class = self._get_type_field()
         if self.type_class:
             self.type_class.__init__(self, *args, **kwargs)
+        else:
+            BaseField.__init__(self, kwargs)
 
 
     def _get_type_field(self):
@@ -212,6 +222,8 @@ class XMLRootField(XMLField):
 
 
 class XMLEmbed(XMLRootField):
+    field_name = "not defined"
+
     def __init__(self, embed_model):
         self.embed_model = embed_model
         super(XMLEmbed, self).__init__(path=self.embed_model.get_root_field()[1].path)
@@ -221,6 +233,8 @@ class XMLEmbed(XMLRootField):
         objects = []
         for root in roots:
             objects.append(self.embed_model(value, element=root))
+        transform = self.get_transform_method(instance)
+        objects = transform(objects)
         return objects
 
 

@@ -356,3 +356,38 @@ class TestXMLImporter(TestCase):
          test = TestXMLModel.import_data(xmldata)
          jojo = test[0]
          self.assertEquals(jojo.name, "transformed")
+
+    def test_embed_transformation(self):
+        class TestInfoXml(XMLModel):
+            root = XMLRootField(path="person/info")
+            age = XMLIntegerField(path="age")
+            taille = XMLFloatField(path="taille")
+
+        class TestXMLModel(XMLModel):
+            root = XMLRootField(path="list")
+            name = XMLCharField(path="person/name")
+            info = XMLEmbed(TestInfoXml)
+
+            def transform_info(self, infos):
+                return filter(lambda info: info.age == 12, infos)
+
+        xmldata = """<data>
+                        <list>
+                            <person>
+                                <name>Jojo</name>
+                                <info>
+                                    <age>12</age>
+                                    <taille>1.2</taille>
+                                </info>
+                                <info>
+                                    <age>13</age>
+                                    <taille>1.3</taille>
+                                </info>
+                            </person>
+                        </list>
+                     </data>"""
+        test = TestXMLModel.import_data(xmldata)
+        self.assertEquals(test[0].name, "Jojo")
+        self.assertEquals(len(test[0].info), 1)
+
+
