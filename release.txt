@@ -1,3 +1,9 @@
+0.2.1.0
+- Switch from an app to a library
+- Some internal refactoring
+- Split clarified between CSV and XML
+- if invalid choice and not null, raise a ValueError.
+
 0.2.0.10
 
 - You can use transform_<field_name> instead of transform in the field constructor
