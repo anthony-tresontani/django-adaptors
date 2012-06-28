@@ -44,7 +44,8 @@ class CsvFieldDataException(CsvDataException):
         CsvDataException.__init__(self, line, field_error=field_error)
 
 
-class SkipRow(Exception): pass
+class SkipRow(Exception):
+    pass
 
 
 class BaseModel(object):
@@ -82,7 +83,6 @@ class BaseModel(object):
         self.field_matching_name = field.__dict__.get("match", attr_name)
         return field.get_prep_value(value)
 
-
     def update_object(self, dict_values, object, update_dict):
         new_dict_values = {}
         if 'update' in update_dict:
@@ -93,7 +93,7 @@ class BaseModel(object):
         else:
             new_dict_values = dict_values
         for field_name in new_dict_values:
-            attr = setattr(object, field_name, new_dict_values[field_name])
+            setattr(object, field_name, new_dict_values[field_name])
         object.save()
 
     def base_create_model(self, model, **dict_values):
@@ -236,7 +236,6 @@ class CsvModel(BaseModel):
         self.validate()
         values = {}
         silent_failure = self.cls.silent_failure()
-        load_failed = False
         self.multiple_creation_field = None
         composed_fields = []
         index_offset = 0
@@ -310,6 +309,7 @@ class CsvDbModel(CsvModel):
             list_exclusion.append('id')
         return list_exclusion
 
+
 class XMLModel(BaseModel):
     _exclude_data_fields = ['root']
 
@@ -339,6 +339,7 @@ class XMLModel(BaseModel):
     @classmethod
     def get_importer(cls, *args):
         return XMLImporter(model=cls)
+
 
 class XMLImporter(object):
     def __init__(self, model):
@@ -374,6 +375,7 @@ class LinearLayout(object):
             value = model(data=line, delimiter=delimiter)
             lines.append(value)
         return value
+
 
 class TabularLayout(object):
     def __init__(self):
