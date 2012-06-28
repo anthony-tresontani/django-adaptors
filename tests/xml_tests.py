@@ -332,7 +332,8 @@ class TestXMLImporter(TestCase):
         xml_invalid = "<data><choice>y</choice></data>"
         choice_field= XMLCharField(path="choice", choices=['Y', 'N'])
         self.assertEquals(choice_field.get_prep_value(xml_valid), 'Y')
-        self.assertEquals(choice_field.get_prep_value(xml_invalid), None)
+        with self.assertRaises(ValueError):
+            self.assertEquals(choice_field.get_prep_value(xml_invalid), None)
 
     def test_transform_method(self):
          class TestXMLModel(XMLModel):

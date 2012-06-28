@@ -21,7 +21,15 @@ class FieldValueMissing(FieldError):
     def __init__(self, field_name):
         super(FieldValueMissing, self).__init__("No value found for field %s" % field_name)
 
+class ChoiceError(ValueError):pass
 
+class AllChoices(object):
+    def __contains__(self, value):
+        return True
+
+class AlwaysValidValidator(object):
+    def validate(self, val):
+        return True
 
 class Field(object):
     position = 0
@@ -38,45 +46,39 @@ class Field(object):
             Field.position += 1
         if 'match' in kwargs:
             self.match = kwargs.pop('match')
-        if 'transform' in kwargs:
-            self.transform = kwargs.pop('transform')
-        if 'validator' in kwargs:
-            self.validator = kwargs.pop('validator')
+        self.transform = kwargs.pop('transform', lambda val:val)
+        self.validator = kwargs.pop('validator', AlwaysValidValidator)
         if 'multiple' in kwargs:
             self.has_multiple = kwargs.pop('multiple')
-        if 'prepare' in kwargs:
-            self.prepare = kwargs.pop('prepare')
+        self.prepare = kwargs.pop('prepare', lambda val:val)
         if 'keys' in kwargs and isinstance(self, ComposedKeyField):
             self.keys = kwargs.pop('keys')
-        self.choices= kwargs.pop('choices', None)
+        self.choices= kwargs.pop('choices', AllChoices())
         if len(kwargs) > 0:
             raise ValueError("Arguments %s unexpected" % kwargs.keys())
 
     def get_prep_value(self, value, instance=None):
         try:
-            if hasattr(self, "prepare"):
-                value = self.prepare(value)
-            if not value and self.null:
-                if self.default is not None:
-                    value = self.default
+            value = self.prepare(value)
+            if not value and self.null and self.default is not None:
+                value = self.default
             else:
                 value = self.to_python(value)
-            if self.choices:
-                if value not in self.choices:
-                    value = None 
-            if hasattr(self, "transform"):
-                value = self.transform(value)
-            else:
-                if hasattr(self, "fieldname") and instance:
-                    transform = getattr(instance, "transform_" + self.fieldname, lambda val: val)
-                    value = transform(value)
-            if hasattr(self, "validator"):
-                validator = self.validator()
-                if not validator.validate(value):
-                    raise FieldError(validator.__class__.validation_message)
+            if value not in self.choices:
+                if not self.null:
+                    raise ChoiceError("Value \'%s\' does not belong to %s" % (value, self.choices))
+                value = None 
+            transform_method = "transform_" + getattr(self, "fieldname", self.field_name)
+            # Look for transform_<field_name>, else look for the transform parameter, else identity method
+            transform = getattr(instance, transform_method, self.transform)
+            value = transform(value)
+            if not self.validator().validate(value):
+                raise FieldError(self.validator.validation_message)
             return value
+        except ChoiceError, e:
+            raise 
         except FieldError, e:
-            raise e
+            raise
         except ValueError, e:
             raise ValueError("Value \'%s\' in columns %d does not match the expected type %s" %
                              (value, self.position + 1, self.__class__.field_name))
