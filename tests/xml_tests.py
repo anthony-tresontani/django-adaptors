@@ -1,6 +1,7 @@
 from django.test import TestCase
 from adaptor.fields import *
 from adaptor.model import XMLModel
+from adaptor import exceptions
 from tests.test_app.models import *
 
 
@@ -74,7 +75,7 @@ class TestXMLImporter(TestCase):
                             <name>Gigi</name>
                         </person>
                      </data>"""
-        self.assertRaises(FieldValueMissing, TestXMLModel.import_data, xmldata)
+        self.assertRaises(exceptions.FieldValueMissing, TestXMLModel.import_data, xmldata)
 
 
     def test_null_value(self):
