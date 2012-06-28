@@ -73,8 +73,12 @@ class Field(BaseField):
         except exceptions.FieldError:
             raise
         except ValueError:
-            raise ValueError("Value \'%s\' in columns %d does not match the expected type %s" %
+            self.raise_type_error(value)
+
+    def raise_type_error(self, value):
+        raise ValueError("Value \'%s\' in columns %d does not match the expected type %s" %
                              (value, self.position + 1, self.__class__.field_name))
+
 
 
 class IntegerField(Field):
@@ -203,6 +207,11 @@ class XMLField(Field):
 
     def set_root(self, root):
         self.root = root
+
+    def raise_type_error(self, value):
+        raise ValueError("Value \'%s\' does not match the expected type %s" %
+                             (value, self.__class__.field_name))
+
 
 
 class XMLRootField(XMLField):
