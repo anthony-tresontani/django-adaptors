@@ -13,14 +13,12 @@ class ImproperlyConfigured(Exception):
     """
     Raised if a missing config value is detected
     """
-    pass
 
 
 class CsvException(Exception):
     """
     Raised if a problem in the file is detected
     """
-    pass
 
 
 class CsvDataException(CsvException):
@@ -31,18 +29,15 @@ class CsvDataException(CsvException):
         self.line = line + 1
         self.error = error
         self.field_error = field_error
-        if self.error:
-            Exception.__init__(self, u"Line %d: %s" % (self.line, self.error))
-        elif self.field_error:
-            Exception.__init__(self, u"Line %d: %s" % (self.line,
-                                                       self.field_error))
+        err_msg = self.error if self.error else self.field_error
+        super(CsvDataException, self).__init__(u"Line %d: %s" % (self.line, err_msg))
 
 
 class CsvFieldDataException(CsvDataException):
     def __init__(self, line, field_error, model, value):
         self.model = model
         self.value = value
-        CsvDataException.__init__(self, line, field_error=field_error)
+        super(CsvFieldDataException, self).__init__(line, field_error=field_error)
 
 
 class SkipRow(Exception):
@@ -53,6 +48,11 @@ class BaseModel(object):
     def __init__(self, data, delimiter=None):
         self.cls = self.__class__
         self.attrs = self.get_fields()
+        self.errors = []
+        self.dont_raise_exception = hasattr(self.cls, "Meta") and hasattr(self.cls.Meta, "raise_exception") and not self.cls.Meta.raise_exception
+
+    def is_valid(self):
+        return len(self.errors) == 0
 
     @classmethod
     def get_fields(cls):
@@ -328,14 +328,23 @@ class XMLModel(BaseModel):
                 return field_name, field
         return None
 
+    def set_field_value(self, field_name, field, data):
+        try:
+            self.__dict__[field_name] = field.get_prep_value(data, instance=self)
+        except IndexError:
+            raise FieldValueMissing(field_name)
+
     def construct_obj_from_data(self, data):
         for field_name, field in self.attrs:
             field.set_root(self._base_root)
             try:
-                self.__dict__[field_name] = field.get_prep_value(data, instance=self)
-            except IndexError:
-                raise FieldValueMissing(field_name)
-
+                self.set_field_value(field_name, field, data)
+            except Exception, e:
+                if self.dont_raise_exception:
+                   self.errors.append((field_name,e.message))
+                   continue
+                else:
+                   raise
 
     @classmethod
     def get_importer(cls, *args):

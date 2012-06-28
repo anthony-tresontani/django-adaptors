@@ -14,7 +14,7 @@ if not settings.configured:
             INSTALLED_APPS=[
                 'tests.test_app',
             ],
-            NOSE_ARGS=['-s'],
+#            NOSE_ARGS=['-s'],
         )
 
 from django_nose import NoseTestSuiteRunner
