@@ -188,9 +188,9 @@ class TestXMLImporter(TestCase):
             root = XMLRootField(path="list")
             persons = XMLEmbed(TestXMLModel)
 
-        xmldata = """<data>
+        xmldata ="""<data>
                         <list>
-                            <person>
+                            <person> 
                                 <name>Jojo</name>
                                 <info>
                                     <age>12</age>
@@ -201,10 +201,26 @@ class TestXMLImporter(TestCase):
                                     <taille>1.3</taille>
                                 </info>
                             </person>
-                        </list>
-                     </data>"""
+                       </list>
+                       <list>
+                           <person>
+                               <name>momo</name>
+                               <info>
+                                   <age>21</age>
+                                   <taille>2.1</taille>
+                               </info>
+                               <info>
+                                   <age>31</age>
+                                   <taille>3.1</taille>
+                               </info>
+                            </person>
+                       </list>
+                   </data>"""
+
+
+
         test = TestXMLList.import_data(xmldata)
-        self.assertEquals(len(test), 1)
+        self.assertEquals(len(test), 2)
         self.assertEquals(test[0].persons[0].name, "Jojo")
         self.assertEquals(test[0].persons[0].info[1].age, 13)
 
