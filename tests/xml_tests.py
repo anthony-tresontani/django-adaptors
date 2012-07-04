@@ -1,3 +1,4 @@
+# -*- coding: utf8
 from django.test import TestCase
 from adaptor.fields import *
 from adaptor.model import XMLModel
@@ -12,6 +13,16 @@ class TestXMLImporter(TestCase):
         field = XMLCharField(path="/name", root=None)
         self.assertEquals(field.get_prep_value(xml), "jojo")
  
+    def test_extract_xml_data_unicode(self):
+        xml = u"<danish>større</danish>"
+        field = XMLCharField(path="/danish", root=None)
+        self.assertEquals(field.get_prep_value(xml), u"større")
+
+    def test_extract_xml_path_unicode(self):
+        xml = u"<større>any</større>"
+        field = XMLCharField(path=u"/større", root=None)
+        self.assertEquals(field.get_prep_value(xml), u"any")
+
     def test_extract_xml_data_from_attribute(self):
         xml = "<person name='jojo'>jojotext</person>"
         field = XMLCharField(path="/person", attribute="name", root=None)
@@ -377,9 +388,6 @@ class TestXMLImporter(TestCase):
                   """
         test = TestXMLModel.import_data(xmldata_invalid)
         self.assertEquals(len(test[0].errors), 1)
-        print test[0].errors
-        assert False
-
 
     def test_embed_transformation(self):
         class TestInfoXml(XMLModel):
