@@ -175,14 +175,18 @@ class TestXMLImporter(TestCase):
 
     def test_embed_fields(self):
         class TestInfoXml(XMLModel):
-            root = XMLRootField(path="person/info")
+            root = XMLRootField(path="info")
             age = XMLIntegerField(path="age")
             taille = XMLFloatField(path="taille")
 
         class TestXMLModel(XMLModel):
-            root = XMLRootField(path="list")
-            name = XMLCharField(path="person/name")
+            root = XMLRootField(path="person")
+            name = XMLCharField(path="name")
             info = XMLEmbed(TestInfoXml)
+
+        class TestXMLList(XMLModel):
+            root = XMLRootField(path="list")
+            persons = XMLEmbed(TestXMLModel)
 
         xmldata = """<data>
                         <list>
@@ -199,9 +203,10 @@ class TestXMLImporter(TestCase):
                             </person>
                         </list>
                      </data>"""
-        test = TestXMLModel.import_data(xmldata)
-        self.assertEquals(test[0].name, "Jojo")
-        self.assertEquals(test[0].info[1].age, 13)
+        test = TestXMLList.import_data(xmldata)
+        self.assertEquals(len(test), 1)
+        self.assertEquals(test[0].persons[0].name, "Jojo")
+        self.assertEquals(test[0].persons[0].info[1].age, 13)
 
 
     def test_foreign_field(self):
