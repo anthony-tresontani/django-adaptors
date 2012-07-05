@@ -224,6 +224,9 @@ class TestXMLImporter(TestCase):
         self.assertEquals(test[0].persons[0].name, "Jojo")
         self.assertEquals(test[0].persons[0].info[1].age, 13)
 
+        self.assertEquals(test[1].persons[0].name, "momo")
+        self.assertEquals(test[1].persons[0].info[1].age, 31)
+
 
     def test_foreign_field(self):
         # No exception should be raised
