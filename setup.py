@@ -15,8 +15,8 @@ setup(name='django-adaptors',
       keywords="CSV XML Django adaptor",
       packages=['adaptor'],
       install_requires=[
-          'lxml==2.3.4',
-          'Django==1.4',
+          'lxml>=2.3.4',
+          'Django>=1.4',
       ],
       classifiers=[
         "Development Status :: 3 - Alpha",
