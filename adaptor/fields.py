@@ -122,7 +122,6 @@ class DecimalField(Field):
         return Decimal(value)
 
 
-
 class FloatField(Field):
     field_name = "A float number"
 
