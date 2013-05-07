@@ -1,5 +1,4 @@
 from datetime import datetime
-from lxml import etree
 
 from django.db.models import Model as djangoModel
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
@@ -177,6 +176,7 @@ class XMLField(Field):
                 return base_class
 
     def get_prep_value(self, value, instance=None):
+        from lxml import etree
         element = self.root if self.root is not None else etree.fromstring(value)
         values = element.xpath(self.path)
         if not values and self.null:
@@ -207,6 +207,7 @@ class XMLRootField(XMLField):
         pass
 
     def get_root(self, value):
+        from lxml import etree
         element = self.root if self.root is not None else etree.fromstring(value)
         return element.xpath(self.path)
 

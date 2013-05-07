@@ -2,6 +2,7 @@
 import os
 from setuptools import setup
 
+
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
@@ -15,12 +16,13 @@ setup(name='django-adaptors',
       keywords="CSV XML Django adaptor",
       packages=['adaptor'],
       install_requires=[
-          'lxml>=2.3.4',
           'Django>=1.4',
       ],
+      extras_require={
+          'XML': ['lxml>=2.3.4']
+      },
       classifiers=[
-        "Development Status :: 3 - Alpha",
-        "Topic :: Utilities",
-        "License :: OSI Approved :: BSD License",
-    ],
-)
+          "Development Status :: 3 - Alpha",
+          "Topic :: Utilities",
+          "License :: OSI Approved :: BSD License",
+      ])
