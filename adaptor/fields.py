@@ -1,4 +1,5 @@
 from datetime import datetime
+from decimal import Decimal
 from lxml import etree
 
 from django.db.models import Model as djangoModel
@@ -113,6 +114,12 @@ class DateField(Field):
 
     def to_python(self, value):
         return datetime.strptime(value, self.format)
+
+class DecimalField(Field):
+    field_name = "A Decimal number"
+
+    def to_python(self, value):
+        return Decimal(value)
 
 
 class FloatField(Field):

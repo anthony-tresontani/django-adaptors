@@ -616,6 +616,12 @@ class TestFields(TestCase):
         field = DateField(format="%d/%m/%Y")
         self.assertEquals(field.to_python("22/05/2012"), datetime(2012,05,22))
 
+    def test_decimal_field(self):
+        field = DecimalField()
+        self.assertEquals(field.to_python("2030"), Decimal("2030"))
+        self.assertEquals(field.to_python("2030.404"), Decimal("2030.404"))
+        self.assertEquals(field.to_python(2), Decimal(2))
+
 
 class TestImporter(TestCase):
     def test_extra_fields(self):
