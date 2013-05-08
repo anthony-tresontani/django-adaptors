@@ -106,6 +106,7 @@ Fields
 Fields available are:
 
 - **IntegerField** : return an int
+- **DecimalField**: return a decimal.Decimal
 - **FloatField** : return a float
 - **CharField** : return a string
 - **DateField** : return a datetime
@@ -178,7 +179,7 @@ Meta options
 `delimiter`
 
     define the delimiter of the csv file.
-    If you do not set one, the sniffer will try yo find one itself.
+    If you do not set one, the sniffer will try to find one itself.
 
 `has_header`
 
@@ -296,4 +297,4 @@ and you should be able to see the tests pass by running::
 Any Questions
 =============
 
-For any question, you can contact my at csv.tresontani@gmail.com
+For any questions, you can contact me at csv.tresontani@gmail.com
