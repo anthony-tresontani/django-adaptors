@@ -239,6 +239,9 @@ class XMLIntegerField(XMLField, IntegerField):
     pass
 
 
+class XMLDecimalField(XMLField, DecimalField):
+    pass
+
 class XMLFloatField(XMLField, FloatField):
     pass
 
