@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.test import TestCase
 from adaptor.fields import *
 from adaptor.model import XMLModel
@@ -11,7 +13,7 @@ class TestXMLImporter(TestCase):
         xml = "<name>jojo</name>"
         field = XMLCharField(path="/name", root=None)
         self.assertEquals(field.get_prep_value(xml), "jojo")
- 
+
     def test_extract_xml_data_from_attribute(self):
         xml = "<person name='jojo'>jojotext</person>"
         field = XMLCharField(path="/person", attribute="name", root=None)
@@ -28,6 +30,11 @@ class TestXMLImporter(TestCase):
         xml = "<data><name>jojo</name><length>2.0</length></data>"
         float_field = XMLFloatField(path="length", root=None)
         self.assertEquals(float_field.get_prep_value(xml), 2.0)
+
+    def test_extract_xml_data_decimal(self):
+        xml = "<data><name>jojo</name><length>2.0</length></data>"
+        decimal_field = XMLDecimalField(path="length", root=None)
+        self.assertEquals(decimal_field.get_prep_value(xml), Decimal('2.0'))
 
     def test_transform(self):
         xml = "<data><name>jojo</name><length>2.0</length></data>"
