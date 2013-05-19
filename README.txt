@@ -3,3 +3,11 @@ It is based on a django-style declarative model.
 
 More information available on read the doc:
 http://django-adaptors.readthedocs.org/
+
+Release notes
+-------------
+
+0.2.5:
+
+- add DecimalField
+- lxml dependency optional
