@@ -384,8 +384,6 @@ class TestXMLImporter(TestCase):
                   """
         test = TestXMLModel.import_data(xmldata_invalid)
         self.assertEquals(len(test[0].errors), 1)
-        print test[0].errors
-        assert False
 
 
     def test_embed_transformation(self):
