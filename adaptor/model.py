@@ -461,9 +461,15 @@ class CsvImporter(object):
 
     def import_data(self, data):
         lines = []
-        self.get_class_delimiter()
         line_number = 0
-        for line in csv.reader(data, delimiter=self.delimiter):
+        self.get_class_delimiter()
+        reader = csv.reader(data, delimiter=self.delimiter)
+
+        if self.csvModel.has_header():
+            reader.next()
+            line_number = 1
+
+        for line in reader:
             self.process_line(data, line, lines, line_number, self.csvModel)
             line_number += 1
         return lines
@@ -479,10 +485,7 @@ class CsvImporter(object):
         except ForeignKeyFieldError, e:
             raise CsvFieldDataException(line_number, field_error=e.message, model=e.model, value=e.value)
         except ValueError, e:
-            if line_number == 0 and self.csvModel.has_header():
-                pass
-            else:
-                raise CsvDataException(line_number, field_error=e.message)
+            raise CsvDataException(line_number, field_error=e.message)
         except IndexError, e:
             raise CsvDataException(line_number, error="Number of fields invalid")
         return value

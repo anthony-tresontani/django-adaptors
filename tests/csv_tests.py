@@ -214,6 +214,25 @@ class TestCsvImporter(TestCase):
         test = TestCsvWithHeader.import_data(TestCsvWithHeader.test_data)
         self.assertEquals(MyModel.objects.all().count(), 2)
 
+    def test_with_valid_header(self):
+        class TestCsvWithValidHeader(CsvModel):
+            name = CharField()
+            category = CharField()
+            description = CharField()
+
+            class Meta:
+                delimiter = ";"
+                has_header = True
+
+            test_data = [
+                "Name;Category;Description", 
+                "Bread;Food;Traditional bread",
+                "Lettuce;Vegetable;Good for salad"
+            ]
+
+        test = TestCsvWithValidHeader.import_data(TestCsvWithValidHeader.test_data)
+        self.assertEquals(len(test), 2)
+
     def test_direct_to_db(self):
         test = TestCsvDBOnlyModel.import_data(TestCsvDBOnlyModel.test_data)
         self.assertEquals(MyModel.objects.all().count(), 2)
