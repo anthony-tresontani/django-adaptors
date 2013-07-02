@@ -496,7 +496,7 @@ class CsvImporter(object):
             self.delimiter = self.csvModel.Meta.delimiter
 
     def import_from_filename(self, filename):
-        csv_file = open(filename)
+        csv_file = open(filename, 'rU')
         return self.import_from_file(csv_file)
 
     def import_from_file(self, csv_file):
