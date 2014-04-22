@@ -21,6 +21,7 @@ class BaseField(object):
     def __init__(self, kwargs):
         self.transform = kwargs.pop('transform', lambda val:val)
 
+
 class Field(BaseField):
     position = 0
 
@@ -81,7 +82,6 @@ class Field(BaseField):
                              (value, self.position + 1, self.__class__.field_name))
 
 
-
 class IntegerField(Field):
     field_name = "Integer"
 
@@ -123,9 +123,9 @@ class DateField(Field):
             self.format = "%d/%m/%Y"
         super(DateField, self).__init__(*args, **kwargs)
 
-
     def to_python(self, value):
         return datetime.strptime(value, self.format)
+
 
 class DecimalField(Field):
     field_name = "A Decimal number"
@@ -184,12 +184,12 @@ class XMLField(Field):
         self.path = kwargs.pop("path")
         self.root = kwargs.pop("root", None)
         self.attribute = kwargs.pop("attribute", None)
+        self.namespaces = kwargs.pop("namespaces", None)
         self.type_class = self._get_type_field()
         if self.type_class:
             self.type_class.__init__(self, *args, **kwargs)
         else:
             BaseField.__init__(self, kwargs)
-
 
     def _get_type_field(self):
         base_classes = self.__class__.__bases__
@@ -200,7 +200,7 @@ class XMLField(Field):
     def get_prep_value(self, value, instance=None):
         from lxml import etree
         element = self.root if self.root is not None else etree.fromstring(value)
-        values = element.xpath(self.path)
+        values = element.xpath(self.path, namespaces=self.namespaces)
         if not values and self.null:
             if self.default is not None:
                 parsed_value = self.default
@@ -208,9 +208,12 @@ class XMLField(Field):
                 return None
         else:
             if not self.attribute:
-                parsed_value = element.xpath(self.path)[0].text
+                parsed_value = element.xpath(self.path,
+                                             namespaces=self.namespaces)[0].text
             else:
-                parsed_value = element.xpath(self.path)[0].get(self.attribute)
+                parsed_value = element.xpath(self.path,
+                                             namespaces=self.namespaces)[0]\
+                                      .get(self.attribute)
         return self.type_class.get_prep_value(self, parsed_value, instance=instance)
 
     def set_root(self, root):
@@ -219,7 +222,6 @@ class XMLField(Field):
     def raise_type_error(self, value):
         raise ValueError("Value \'%s\' does not match the expected type %s" %
                              (value, self.__class__.field_name))
-
 
 
 class XMLRootField(XMLField):
@@ -236,7 +238,7 @@ class XMLRootField(XMLField):
     def get_root(self, value):
         from lxml import etree
         element = self.root if self.root is not None else etree.fromstring(value)
-        return element.xpath(self.path)
+        return element.xpath(self.path, namespaces=self.namespaces)
 
 
 class XMLEmbed(XMLRootField):
@@ -266,6 +268,7 @@ class XMLIntegerField(XMLField, IntegerField):
 
 class XMLDecimalField(XMLField, DecimalField):
     pass
+
 
 class XMLFloatField(XMLField, FloatField):
     pass
