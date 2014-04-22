@@ -418,3 +418,23 @@ class TestXMLImporter(TestCase):
         test = TestXMLModel.import_data(xmldata)
         self.assertEquals(test[0].name, "Jojo")
         self.assertEquals(len(test[0].info), 1)
+
+    def test_using_namespace(self):
+        class TestXMLModel(XMLModel):
+            root = XMLRootField(path="person")
+            first_name = XMLCharField(path="first:name",
+                                      namespaces={'first': "http://example.com/first"})
+            last_name = XMLCharField(path="last:name",
+                                     namespaces={'last': "http://example.com/last"})
+
+        xmldata = """<data xmlns:first="http://example.com/first"
+                           xmlns:last="http://example.com/last">
+                        <person>
+                            <first:name>Jojo</first:name>
+                            <last:name>Gigi</last:name>
+                        </person>
+                     </data>"""
+        test = TestXMLModel.import_data(xmldata)
+        jojo = test[0]
+        self.assertEquals(jojo.first_name, "Jojo")
+        self.assertEquals(jojo.last_name, "Gigi")
