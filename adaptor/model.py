@@ -266,7 +266,7 @@ class CsvModel(BaseModel):
                 else:
                     value = self.get_value(attr_name, field, value)
                     self.set_values(values, self.field_matching_name, value)
-            except ValueError, e:
+            except ValueError as e:
                 if silent_failure:
                    raise SkipRow()
                 else:
@@ -339,7 +339,7 @@ class XMLModel(BaseModel):
             field.set_root(self._base_root)
             try:
                 self.set_field_value(field_name, field, data)
-            except Exception, e:
+            except Exception as e:
                 if self.dont_raise_exception:
                    self.errors.append((field_name,e.message))
                    continue
@@ -370,12 +370,12 @@ class LinearLayout(object):
         multiple_index = 0
         for index, (fieldname, field) in enumerate(fields):
             if hasattr(field, "has_multiple") and field.has_multiple:
-               multiple_index = index 
+               multiple_index = index
                multiple_index_fieldname = fieldname
                break
         if multiple_index:
             if not line[multiple_index:]:
-                raise ValueError("No value found for column %s" % multiple_index_fieldname) 
+                raise ValueError("No value found for column %s" % multiple_index_fieldname)
             for index, val in enumerate(line[multiple_index:]):
                 line_ = line[0:multiple_index] + [line[multiple_index + index]]
                 value = model(data=line_, delimiter=delimiter)
@@ -476,14 +476,14 @@ class CsvImporter(object):
             value = self.layout.process_line(lines, line, model, delimiter=self.delimiter)
         except SkipRow:
             pass
-        except ForeignKeyFieldError, e:
+        except ForeignKeyFieldError as e:
             raise CsvFieldDataException(line_number, field_error=e.message, model=e.model, value=e.value)
-        except ValueError, e:
+        except ValueError as e:
             if line_number == 0 and self.csvModel.has_header():
                 pass
             else:
                 raise CsvDataException(line_number, field_error=e.message)
-        except IndexError, e:
+        except IndexError as e:
             raise CsvDataException(line_number, error="Number of fields invalid")
         return value
 
@@ -523,4 +523,3 @@ class GroupedCsvImporter(CsvImporter):
                                                                               model['model'])
             else:
                 super(GroupedCsvImporter, self).process_line(data, line, lines, line_number, model)
-
