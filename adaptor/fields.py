@@ -282,7 +282,7 @@ class XMLDjangoModelField(XMLField, DjangoModelField):
     def get_prep_value(self, value, instance=None):
         try:
             return super(XMLDjangoModelField, self).get_prep_value(value, instance=instance)
-        except exceptions.ForeignKeyFieldError, e:
+        except exceptions.ForeignKeyFieldError as e:
             if self.nomatch:
                 return None
             else:
