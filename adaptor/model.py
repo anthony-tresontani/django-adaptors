@@ -283,9 +283,9 @@ class CsvModel(BaseModel):
 class CsvDbModel(CsvModel):
     def validate(self):
         if not self.cls.is_db_model():
-            raise ImproperlyConfigured("dbModel attribute is missing \
-                                        or wrongly configured in the \
-                                        CsvDbModel class.")
+            raise ImproperlyConfigured("dbModel attribute is missing or "
+                                       "wrongly configured in the CsvDbModel "
+                                       "class.")
 
     @classmethod
     def get_fields(cls):
