@@ -57,21 +57,21 @@ class Field(BaseField):
     def get_prep_value(self, value, instance=None):
         try:
             value = self.prepare(value)
-            if not value and self.null and self.default is not None:
+            if not value and self.null:
                 value = self.default
             else:
                 value = self.to_python(value)
             if value not in self.choices:
                 if not self.null:
                     raise exceptions.ChoiceError("Value \'%s\' does not belong to %s" % (value, self.choices))
-                value = None 
+                value = None
             transform = self.get_transform_method(instance)
             value = transform(value)
             if not self.validator().validate(value):
                 raise exceptions.FieldError(self.validator.validation_message)
             return value
         except exceptions.ChoiceError:
-            raise 
+            raise
         except exceptions.FieldError:
             raise
         except ValueError:
