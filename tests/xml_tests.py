@@ -162,8 +162,7 @@ class TestXMLImporter(TestCase):
             def transform_name(self, value):
                 return value.upper()
 
-        xml = """<?xml version="1.0" encoding="UTF-8" ?>
-                 <person>
+        xml = """<person>
                      <name>barry</name>
                  </person>"""
         doc = TestXMLDoc.import_data(xml)[0]
@@ -398,7 +397,7 @@ class TestXMLImporter(TestCase):
             info = XMLEmbed(TestInfoXml)
 
             def transform_info(self, infos):
-                return filter(lambda info: info.age == 12, infos)
+                return list(filter(lambda info: info.age == 12, infos))
 
         xmldata = """<data>
                         <list>
@@ -418,6 +417,7 @@ class TestXMLImporter(TestCase):
         test = TestXMLModel.import_data(xmldata)
         self.assertEquals(test[0].name, "Jojo")
         self.assertEquals(len(test[0].info), 1)
+        self.assertEquals(test[0].info[0].taille, 1.2)
 
     def test_using_namespace(self):
         class TestXMLModel(XMLModel):

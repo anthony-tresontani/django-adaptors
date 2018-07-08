@@ -1,5 +1,4 @@
 argparse==1.2.1
-django-nose==1.1
-nose==1.1.2
-wsgiref==0.1.2
+django-nose==1.4.5
+nose==1.2.1
 lxml==3.3.5

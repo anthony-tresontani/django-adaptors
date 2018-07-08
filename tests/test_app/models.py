@@ -10,10 +10,10 @@ class MyModel2(models.Model):
     other_pk = models.PositiveSmallIntegerField()
     
 class MyModelWithForeign(models.Model):
-    foreign = models.ForeignKey(MyModel)
+    foreign = models.ForeignKey(MyModel, on_delete=models.CASCADE)
     
 class OtherForeign(models.Model):
-    foreign = models.ForeignKey(MyModel)
+    foreign = models.ForeignKey(MyModel, on_delete=models.CASCADE)
     
 class MultipleModel(models.Model):
     nom = models.CharField(max_length=100)
@@ -24,7 +24,7 @@ class ComposedKeyForeign(models.Model):
     key_2 = models.PositiveIntegerField()
 
 class ComposedKey(models.Model):
-    composed_key_foreign = models.ForeignKey(ComposedKeyForeign)
+    composed_key_foreign = models.ForeignKey(ComposedKeyForeign, on_delete=models.CASCADE)
     
 class MyModelBis(models.Model):
     nom = models.CharField(max_length=15)
@@ -50,5 +50,5 @@ class LastNameModel(models.Model):
     last_name = models.CharField(max_length=10)
     
 class LastNameModelWithForeign(models.Model):
-    foreign = models.ForeignKey(FirstNameModel)
+    foreign = models.ForeignKey(FirstNameModel, on_delete=models.CASCADE)
     last_name = models.CharField(max_length=10)

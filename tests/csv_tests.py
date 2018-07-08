@@ -273,24 +273,24 @@ class TestCsvImporter(TestCase):
         data = [test_data_template % my_model.id, test_data_template % (my_model.id + 999)]
         try:
             test = TestCsvDbForeign.import_data(data)
-        except CsvException, e:
-            self.assertEquals(e.message, u'Line 2: No match found for MyModel')
+        except CsvException as e:
+            self.assertEquals(str(e), u'Line 2: No match found for MyModel')
         else:
             self.assertTrue(False, "No valueError raised")
 
     def test_error_message_too_many_field(self):
         try:
             test = TestCsvModel.import_data(['1,error,12'])
-        except CsvException, e:
-            self.assertEquals(e.message, u'Line 1: Number of fields invalid')
+        except CsvException as e:
+            self.assertEquals(str(e), u'Line 1: Number of fields invalid')
         else:
             self.assertTrue(False, "No valueError raised")
 
     def test_error_message_integer_field(self):
         try:
             test = TestCsvModel.import_data(['1;error;12'])
-        except CsvException, e:
-            self.assertEquals(e.message,
+        except CsvException as e:
+            self.assertEquals(str(e),
                               u"Line 1: Value 'error' in columns 2 does not match the expected type Integer")
         else:
             self.assertTrue(False, "No valueError raised")
@@ -312,7 +312,7 @@ class TestCsvImporter(TestCase):
         self.assertRaises(CsvDataException, CsvValidator.import_data, ['11'])
         try:
             CsvValidator.import_data(['10'])
-        except CsvDataException, e:
+        except CsvDataException as e:
             self.assertTrue(False, "No exception should be raised")
         self.assertTrue(True)
 
@@ -606,15 +606,15 @@ class TestFields(TestCase):
         myModel2 = MyModel2.objects.create(other_pk=999)
         try:
             field.to_python(666)
-        except ValueError, e:
-            self.assertEquals(e.message, 'No match found for MyModel2')
+        except ValueError as e:
+            self.assertEquals(str(e), 'No match found for MyModel2')
         else:
             self.assertTrue(False, "No exception raised")
         self.assertEquals(field.to_python(myModel2.other_pk), myModel2)
 
     def test_date_field(self):
         field = DateField(format="%d/%m/%Y")
-        self.assertEquals(field.to_python("22/05/2012"), datetime(2012,05,22))
+        self.assertEquals(field.to_python("22/05/2012"), datetime(2012, 0o5, 22))
 
     def test_decimal_field(self):
         field = DecimalField()

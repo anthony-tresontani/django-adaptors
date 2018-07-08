@@ -162,7 +162,7 @@ class BaseModel(object):
     def export(self):
         line = u""
         for field_name, field in self.get_fields():
-            line += unicode(getattr(self, field_name))
+            line += str(getattr(self, field_name))
             line += self.delimiter
         return line.rstrip(self.delimiter) # remove the extra delimiter
 
@@ -341,7 +341,7 @@ class XMLModel(BaseModel):
                 self.set_field_value(field_name, field, data)
             except Exception as e:
                 if self.dont_raise_exception:
-                   self.errors.append((field_name,e.message))
+                   self.errors.append((field_name, str(e)))
                    continue
                 else:
                    raise
@@ -477,12 +477,12 @@ class CsvImporter(object):
         except SkipRow:
             pass
         except ForeignKeyFieldError as e:
-            raise CsvFieldDataException(line_number, field_error=e.message, model=e.model, value=e.value)
+            raise CsvFieldDataException(line_number, field_error=str(e), model=e.model, value=e.value)
         except ValueError as e:
             if line_number == 0 and self.csvModel.has_header():
                 pass
             else:
-                raise CsvDataException(line_number, field_error=e.message)
+                raise CsvDataException(line_number, field_error=str(e))
         except IndexError as e:
             raise CsvDataException(line_number, error="Number of fields invalid")
         return value
