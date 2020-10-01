@@ -305,7 +305,7 @@ class CsvDbModel(CsvModel):
     def get_exclusion_fields(cls):
         list_exclusion = []
         if hasattr(cls, "Meta") and hasattr(cls.Meta, "exclude"):
-            list_exclusion.append(*cls.Meta.exclude)
+            list_exclusion.extend(cls.Meta.exclude)
         if 'id' not in list_exclusion:
             list_exclusion.append('id')
         return list_exclusion
