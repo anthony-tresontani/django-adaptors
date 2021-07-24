@@ -110,9 +110,9 @@ Fields available are:
 - **FloatField** : return a float
 - **CharField** : return a string
 - **DateField** : return a datetime
-- **ForeignKey** : return a django model object
+- **DjangoModelField** : return a django model object (Require a Model as the first argument.)
 - **IgnoredField** : skip the value
-- **ComposedKeyForeign** : return a django model object retrieve with multiple values as keys.
+- **ComposedKeyForeign** : return a django model object retrieve with multiple values as keys.  (Require a Model as the first argument.)
 - **BooleanField** : return a boolean
 
 Options :
